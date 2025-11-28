@@ -32,7 +32,7 @@
     .btn-danger { background:#dc2626; color:#fff; }
     .btn-small { padding:4px 8px; font-size:11px; }
     .table-container { overflow-x:auto; }
-    table { border-collapse:collapse; width:100%; min-width:1000px; font-size:12px; }
+    table { border-collapse:collapse; width:100%; min-width:1100px; font-size:12px; }
     thead { background:#1d4ed8; color:#fff; position:sticky; top:0; }
     th, td { border:1px solid #e5e7eb; padding:4px 6px; text-align:right; white-space:nowrap; }
     th:first-child, td:first-child { text-align:center; }
@@ -56,7 +56,7 @@
     <section class="card">
       <h2>Daily Balance (Main)</h2>
       <small>
-        Bank / Cash / Other Debit + မြန်မာငွေ (MMK) နဲ့ Exchange Rate ထည့်ပါ။ Total / Total_Other ကို အော်တိုတွက်ပေးမယ်။
+        Bank / Cash / Other Debit + မြန်မာငွေ (MMK) နဲ့ Exchange Rate ထည့်ပါ။ Total / Original Total / Total_Other ကို အော်တိုတွက်ပေးမယ်။
       </small>
 
       <form id="balanceForm">
@@ -124,6 +124,10 @@
           <input type="number" id="total" step="1" readonly />
         </label>
 
+        <label>Total Before Other (THB)
+          <input type="number" id="totalBeforeOther" step="1" readonly />
+        </label>
+
         <label>Other People Money (-)
           <input type="number" id="minusOther" step="1" readonly />
         </label>
@@ -143,9 +147,10 @@
 
       <p class="info">
         * မဖြည့်ထားတဲ့ အကွက်တွေကို 0 အနေနဲ့တွက်ပေးထားပါတယ်။<br>
-        * Total = round( (MMK ÷ 100,000) × Rate )<br>
+        * Total (MMK ➜ THB) = round( (MMK ÷ 100,000) × Rate )<br>
+        * Original Total (Before Other) = Bank + Cash + Other Debit + Total(MMK ➜ THB)<br>
         * Ledger ထဲက Balance အကုန်ပေါင်းကို minusOther ထဲ Auto ထည့်ပြီး<br>
-        &nbsp;&nbsp;Total_Other = (Bank + Cash + Other Debit + Total) − Other People Money.
+        &nbsp;&nbsp;Total_Other = Original Total − Other People Money.
       </p>
     </section>
 
@@ -162,6 +167,7 @@
               <th>Cash</th><th>Other Debit</th>
               <th>MMK</th><th>Rate</th>
               <th>Total (THB)</th>
+              <th>Original Total</th>
               <th>Other Money (-)</th>
               <th>Total_Other</th>
               <th>Change</th>
@@ -291,8 +297,11 @@
       }
       document.getElementById("total").value = totalFromMMK;
 
+      // Original Total (Before Other)
+      const totalAll = sumTHB + totalFromMMK;
+      document.getElementById("totalBeforeOther").value = totalAll;
+
       const minusOther = numFrom("minusOther");
-      const totalAll   = sumTHB + totalFromMMK;
       const finalTotal = totalAll - minusOther;
       document.getElementById("totalOther").value = finalTotal;
     }
@@ -315,6 +324,7 @@
         MMK: numFrom("MMK"),
         rate: numFrom("rate"),
         total: numFrom("total"),
+        totalBeforeOther: numFrom("totalBeforeOther"),
         minusOther: numFrom("minusOther"),
         totalOther: numFrom("totalOther")
       };
@@ -323,7 +333,7 @@
     function fillForm(row) {
       const ids = [
         "date","YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM",
-        "cash","otherDebit","MMK","rate","total","minusOther","totalOther"
+        "cash","otherDebit","MMK","rate","total","totalBeforeOther","minusOther","totalOther"
       ];
       ids.forEach(id => {
         const el = document.getElementById(id);
@@ -383,10 +393,24 @@
       let lastBalance  = null;
 
       data.forEach(row => {
+        // Compute original total if missing
+        const bankFields = [
+          "YBBL","YKp","YSCB","YKTB","YTM",
+          "HBBL","HKp","HSCB","HTM","TTM",
+          "cash","otherDebit"
+        ];
+        let sumTHB = 0;
+        bankFields.forEach(id => { sumTHB += (row[id] || 0); });
+        const totalFromMMK = row.total || 0;
+        const originalTotal =
+          (typeof row.totalBeforeOther === "number")
+            ? row.totalBeforeOther
+            : (sumTHB + totalFromMMK);
+
         const tr = document.createElement("tr");
         const keys = [
           "date","YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM",
-          "cash","otherDebit","MMK","rate","total","minusOther","totalOther"
+          "cash","otherDebit","MMK","rate","total"
         ];
         keys.forEach(key => {
           const td = document.createElement("td");
@@ -400,6 +424,21 @@
           tr.appendChild(td);
         });
 
+        // Original Total column
+        const tdOrig = document.createElement("td");
+        tdOrig.textContent = originalTotal;
+        tr.appendChild(tdOrig);
+
+        // Other Money, Total_Other
+        const tdMinus = document.createElement("td");
+        tdMinus.textContent = (row.minusOther === undefined || row.minusOther === null) ? "" : row.minusOther;
+        tr.appendChild(tdMinus);
+
+        const tdTotalOther = document.createElement("td");
+        tdTotalOther.textContent = (row.totalOther === undefined || row.totalOther === null) ? "" : row.totalOther;
+        tr.appendChild(tdTotalOther);
+
+        // Change column
         const tdChange = document.createElement("td");
         let diffText = "";
         if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
@@ -420,7 +459,7 @@
         const btnEdit = document.createElement("button");
         btnEdit.textContent = "Edit";
         btnEdit.className = "btn-small btn-secondary";
-        btnEdit.onclick = () => fillForm(row);
+        btnEdit.onclick = () => fillForm({ ...row, totalBeforeOther: originalTotal });
 
         const btnDel = document.createElement("button");
         btnDel.textContent = "Delete";
@@ -611,18 +650,30 @@
 
       data.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
 
-      // compute Change like table
       let prevTotal = null;
       const rows = [];
       const header = [
         "Date","YBBL","YK+","YSCB","YKTB","YTM",
         "HBBL","HK+","HSCB","HTM","TTM",
         "Cash","Other Debit","MMK","Rate",
-        "Total (THB)","Other Money (-)","Total_Other","Change"
+        "Total (THB)","Original Total","Other Money (-)","Total_Other","Change"
       ];
       rows.push(header);
 
       data.forEach(row => {
+        const bankFields = [
+          "YBBL","YKp","YSCB","YKTB","YTM",
+          "HBBL","HKp","HSCB","HTM","TTM",
+          "cash","otherDebit"
+        ];
+        let sumTHB = 0;
+        bankFields.forEach(id => { sumTHB += (row[id] || 0); });
+        const totalFromMMK = row.total || 0;
+        const originalTotal =
+          (typeof row.totalBeforeOther === "number")
+            ? row.totalBeforeOther
+            : (sumTHB + totalFromMMK);
+
         let change = "";
         if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
           if (prevTotal !== null) {
@@ -631,6 +682,7 @@
           }
           prevTotal = row.totalOther;
         }
+
         rows.push([
           row.date || "",
           row.YBBL || 0,
@@ -648,6 +700,7 @@
           row.MMK || 0,
           row.rate || 0,
           row.total || 0,
+          originalTotal,
           row.minusOther || 0,
           row.totalOther || 0,
           change
@@ -671,7 +724,6 @@
         return;
       }
 
-      // sort by name then date
       data.sort((a,b)=> {
         const n1 = (a.name || "").localeCompare(b.name || "");
         if (n1 !== 0) return n1;
