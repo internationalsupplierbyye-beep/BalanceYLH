@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Daily Balance (Firebase)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin:0; padding:0; background:#f5f7fb; color:#111827; }
+    header { background:#1b4ba0; color:#fff; padding:16px 24px; }
+    header h1 { margin:0; font-size:20px; }
+    header p { margin:4px 0 0 0; font-size:13px; opacity:0.9; }
+    main { padding:16px; max-width:1300px; margin:0 auto 40px auto; }
+    .card { background:#fff; border-radius:10px; padding:16px; margin-bottom:16px; box-shadow:0 1px 4px rgba(15,23,42,0.08); }
+    .card h2 { margin:0 0 8px 0; font-size:18px; }
+    .card small { display:block; font-size:12px; color:#4b5563; margin-bottom:12px; }
+    form { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:8px 12px; align-items:flex-end; }
+    label { display:flex; flex-direction:column; gap:4px; font-size:13px; }
+    input[type="number"], input[type="date"], input[type="text"] {
+      padding:6px 8px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
+    }
+    input[type="number"] { text-align:right; }
+    input:focus { outline:2px solid #1b4ba0; outline-offset:1px; border-color:#1b4ba0; }
+    select {
+      padding:4px 6px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
+      background:#fff;
+    }
+    .btn-row { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
+    button { border:none; border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer; }
+    .btn-primary { background:#1b4ba0; color:#fff; }
+    .btn-secondary { background:#e5e7eb; color:#111827; }
+    .btn-danger { background:#dc2626; color:#fff; }
+    .btn-small { padding:4px 8px; font-size:11px; }
+    .table-container { overflow-x:auto; }
+    table { border-collapse:collapse; width:100%; min-width:1000px; font-size:12px; }
+    thead { background:#1d4ed8; color:#fff; position:sticky; top:0; }
+    th, td { border:1px solid #e5e7eb; padding:4px 6px; text-align:right; white-space:nowrap; }
+    th:first-child, td:first-child { text-align:center; }
+    tbody tr:nth-child(even){ background:#f9fafb; }
+    tbody tr:hover { background:#e5f2ff; }
+    .col-date { min-width:90px; }
+    .col-actions { min-width:120px; text-align:center; }
+    .info { font-size:11px; color:#6b7280; margin-top:8px; }
+  </style>
+  <!-- Excel Export Library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Daily Balance Database</h1>
+    <p>တနေ့တာ ငွေလက်ကျန် + Other People Money Ledger ကို Firebase Firestore ပေါ်သိမ်းဖို့ Web App</p>
+  </header>
+
+  <main>
+    <!-- MAIN BALANCE FORM -->
+    <section class="card">
+      <h2>Daily Balance (Main)</h2>
+      <small>
+        Bank / Cash / Other Debit + မြန်မာငွေ (MMK) နဲ့ Exchange Rate ထည့်ပါ။ Total / Total_Other ကို အော်တိုတွက်ပေးမယ်။
+      </small>
+
+      <form id="balanceForm">
+        <label>Date
+          <input type="date" id="date" required />
+        </label>
+
+        <label>YBBL
+          <input type="number" id="YBBL" step="1" />
+        </label>
+
+        <label>YK+
+          <input type="number" id="YKp" step="1" />
+        </label>
+
+        <label>YSCB
+          <input type="number" id="YSCB" step="1" />
+        </label>
+
+        <label>YKTB
+          <input type="number" id="YKTB" step="1" />
+        </label>
+
+        <label>YTM
+          <input type="number" id="YTM" step="1" />
+        </label>
+
+        <label>HBBL
+          <input type="number" id="HBBL" step="1" />
+        </label>
+
+        <label>HK+
+          <input type="number" id="HKp" step="1" />
+        </label>
+
+        <label>HSCB
+          <input type="number" id="HSCB" step="1" />
+        </label>
+
+        <label>HTM
+          <input type="number" id="HTM" step="1" />
+        </label>
+
+        <label>TTM
+          <input type="number" id="TTM" step="1" />
+        </label>
+
+        <label>Cash
+          <input type="number" id="cash" step="1" />
+        </label>
+
+        <label>Other Debit
+          <input type="number" id="otherDebit" step="1" />
+        </label>
+
+        <label>MMK Amount
+          <input type="number" id="MMK" step="1" />
+        </label>
+
+        <label>Rate / 100,000 MMK (ex: 820)
+          <input type="number" id="rate" step="1" />
+        </label>
+
+        <label>Total (MMK ➜ THB)
+          <input type="number" id="total" step="1" readonly />
+        </label>
+
+        <label>Other People Money (-)
+          <input type="number" id="minusOther" step="1" readonly />
+        </label>
+
+        <label>Total_Other (Final)
+          <input type="number" id="totalOther" step="1" readonly />
+        </label>
+
+        <div class="btn-row">
+          <button type="submit" class="btn-primary">Save / Update</button>
+          <button type="button" class="btn-secondary" id="btnClearForm">Clear Form</button>
+          <button type="button" class="btn-secondary" id="btnClearAll">Clear ALL Data</button>
+          <button type="button" class="btn-secondary" id="btnExport">Export JSON</button>
+          <button type="button" class="btn-secondary" id="btnExportExcel">Export Excel</button>
+        </div>
+      </form>
+
+      <p class="info">
+        * မဖြည့်ထားတဲ့ အကွက်တွေကို 0 အနေနဲ့တွက်ပေးထားပါတယ်။<br>
+        * Total = round( (MMK ÷ 100,000) × Rate )<br>
+        * Ledger ထဲက Balance အကုန်ပေါင်းကို minusOther ထဲ Auto ထည့်ပြီး<br>
+        &nbsp;&nbsp;Total_Other = (Bank + Cash + Other Debit + Total) − Other People Money.
+      </p>
+    </section>
+
+    <!-- DAILY BALANCE TABLE -->
+    <section class="card">
+      <h2>Daily Balance List (From Firebase)</h2>
+      <div class="table-container">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th class="col-date">Date</th>
+              <th>YBBL</th><th>YK+</th><th>YSCB</th><th>YKTB</th><th>YTM</th>
+              <th>HBBL</th><th>HK+</th><th>HSCB</th><th>HTM</th><th>TTM</th>
+              <th>Cash</th><th>Other Debit</th>
+              <th>MMK</th><th>Rate</th>
+              <th>Total (THB)</th>
+              <th>Other Money (-)</th>
+              <th>Total_Other</th>
+              <th>Change</th>
+              <th class="col-actions">Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="info" id="profitSummary"></p>
+    </section>
+
+    <!-- OTHER PEOPLE MONEY LEDGER -->
+    <section class="card">
+      <h2>Other People Money Ledger</h2>
+      <small>
+        လူတယောက်ချင်း Transaction (Date, Cash In, Cash Out, Description) အစုံလင် သိမ်းပြီး Name တယောက်စီ Running Balance ကို တွက်ပြမယ်။
+        အပေါ်မှာ Name Filter နဲ့လည်း စိတ်ကြိုက်ရွေးပြီးကြည့်လို့ရမယ်။
+      </small>
+
+      <form id="peopleForm">
+        <label>Date
+          <input type="date" id="pDate" required />
+        </label>
+        <label>Name
+          <input type="text" id="pName" placeholder="Mi Htoo / Ohmar Win ..." required />
+        </label>
+        <label>Cash In
+          <input type="number" id="pIn" step="1" />
+        </label>
+        <label>Cash Out
+          <input type="number" id="pOut" step="1" />
+        </label>
+        <label>Description
+          <input type="text" id="pDesc" placeholder="Sep salary / Loan / Refund ..." />
+        </label>
+
+        <div class="btn-row">
+          <button type="submit" class="btn-primary" id="btnSavePerson">Save Txn</button>
+          <button type="button" class="btn-secondary" id="btnClearPerson">Clear Form</button>
+          <button type="button" class="btn-secondary" id="btnExportLedgerExcel">Export Ledger Excel</button>
+        </div>
+      </form>
+
+      <!-- Filter Row -->
+      <div class="btn-row" style="margin-top:12px; margin-bottom:4px;">
+        <label style="flex:0 0 220px; font-size:13px;">
+          Filter by Name
+          <select id="personFilter">
+            <option value="">All</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-container">
+        <table id="peopleTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Cash In</th>
+              <th>Cash Out</th>
+              <th>Balance (Per Name)</th>
+              <th class="col-actions">Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <p class="info">
+        * Name တယောက်ချင်း Filter ထောက်ပြီး သက်ဆိုင်တဲ့ Transaction တွေကိုသာ ကြည့်လို့ရမယ်။<br>
+        * Minus Other Money ကတော့ Name တယောက်စီနောက်ဆုံး Balance အားလုံး ပေါင်းထားတာကို သုံးပေးတယ်။
+      </p>
+    </section>
+  </main>
+
+  <!-- Firebase + Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      addDoc,
+      setDoc,
+      doc,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVcVbBPs8s9vifCkfojuMXXykOOblsWBM",
+      authDomain: "balanceylh.firebaseapp.com",
+      projectId: "balanceylh",
+      storageBucket: "balanceylh.firebasestorage.app",
+      messagingSenderId: "338276543010",
+      appId: "1:338276543010:web:f9cb384af5387a7ca0b87b",
+      measurementId: "G-6QNSRHQ9FE"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // -------- Helper --------
+    function numFrom(id) {
+      const v = parseFloat(document.getElementById(id).value);
+      return isNaN(v) ? 0 : v;
+    }
+
+    // -------- Main balance calc --------
+    function recalc() {
+      const bankFields = [
+        "YBBL","YKp","YSCB","YKTB","YTM",
+        "HBBL","HKp","HSCB","HTM","TTM",
+        "cash","otherDebit"
+      ];
+      let sumTHB = 0;
+      bankFields.forEach(id => { sumTHB += numFrom(id); });
+
+      const mmk  = numFrom("MMK");
+      const rate = numFrom("rate");
+
+      let totalFromMMK = 0;
+      if (mmk !== 0 && rate !== 0) {
+        totalFromMMK = Math.round((mmk / 100000) * rate);
+      }
+      document.getElementById("total").value = totalFromMMK;
+
+      const minusOther = numFrom("minusOther");
+      const totalAll   = sumTHB + totalFromMMK;
+      const finalTotal = totalAll - minusOther;
+      document.getElementById("totalOther").value = finalTotal;
+    }
+
+    function getFormData() {
+      return {
+        date: document.getElementById("date").value,
+        YBBL: numFrom("YBBL"),
+        YKp: numFrom("YKp"),
+        YSCB: numFrom("YSCB"),
+        YKTB: numFrom("YKTB"),
+        YTM: numFrom("YTM"),
+        HBBL: numFrom("HBBL"),
+        HKp: numFrom("HKp"),
+        HSCB: numFrom("HSCB"),
+        HTM: numFrom("HTM"),
+        TTM: numFrom("TTM"),
+        cash: numFrom("cash"),
+        otherDebit: numFrom("otherDebit"),
+        MMK: numFrom("MMK"),
+        rate: numFrom("rate"),
+        total: numFrom("total"),
+        minusOther: numFrom("minusOther"),
+        totalOther: numFrom("totalOther")
+      };
+    }
+
+    function fillForm(row) {
+      const ids = [
+        "date","YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM",
+        "cash","otherDebit","MMK","rate","total","minusOther","totalOther"
+      ];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === "date") {
+          el.value = row.date || "";
+        } else {
+          const v = row[id];
+          el.value = (v === undefined || v === null) ? "" : v;
+        }
+      });
+      recalc();
+    }
+
+    function clearForm() {
+      document.getElementById("balanceForm").reset();
+      recalc();
+    }
+
+    // -------- Firestore: daily_balance --------
+    async function fetchAllBalances() {
+      try {
+        const snap = await getDocs(collection(db, "daily_balance"));
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        return list;
+      } catch (err) {
+        console.warn("fetchAllBalances error:", err.message);
+        return [];
+      }
+    }
+
+    async function saveBalanceDoc(data) {
+      await addDoc(collection(db, "daily_balance"), data);
+    }
+
+    async function deleteBalance(id) {
+      await deleteDoc(doc(db, "daily_balance", id));
+    }
+
+    async function clearAllBalanceDocs() {
+      const snap = await getDocs(collection(db, "daily_balance"));
+      const tasks = [];
+      snap.forEach(d => tasks.push(deleteDoc(d.ref)));
+      await Promise.all(tasks);
+    }
+
+    async function renderBalanceTable() {
+      const data = await fetchAllBalances();
+      data.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
+
+      const tbody = document.querySelector("#dataTable tbody");
+      tbody.innerHTML = "";
+
+      let prevTotal = null;
+      let startBalance = null;
+      let lastBalance  = null;
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        const keys = [
+          "date","YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM",
+          "cash","otherDebit","MMK","rate","total","minusOther","totalOther"
+        ];
+        keys.forEach(key => {
+          const td = document.createElement("td");
+          const v  = row[key];
+          if (key === "date") {
+            td.textContent = v || "";
+            td.style.textAlign = "center";
+          } else {
+            td.textContent = (v === undefined || v === null) ? "" : v;
+          }
+          tr.appendChild(td);
+        });
+
+        const tdChange = document.createElement("td");
+        let diffText = "";
+        if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
+          if (prevTotal !== null) {
+            const diff = row.totalOther - prevTotal;
+            diffText = diff === 0 ? "" : diff;
+          }
+          prevTotal = row.totalOther;
+          if (startBalance === null) startBalance = row.totalOther;
+          lastBalance = row.totalOther;
+        }
+        tdChange.textContent = diffText;
+        tr.appendChild(tdChange);
+
+        const tdAction = document.createElement("td");
+        tdAction.className = "col-actions";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.textContent = "Edit";
+        btnEdit.className = "btn-small btn-secondary";
+        btnEdit.onclick = () => fillForm(row);
+
+        const btnDel = document.createElement("button");
+        btnDel.textContent = "Delete";
+        btnDel.className = "btn-small btn-danger";
+        btnDel.style.marginLeft = "4px";
+        btnDel.onclick = async () => {
+          if (!confirm("Delete record for " + (row.date || "") + " ?")) return;
+          await deleteBalance(row.id);
+          await renderBalanceTable();
+          alert("Deleted ✔");
+        };
+
+        tdAction.appendChild(btnEdit);
+        tdAction.appendChild(btnDel);
+        tr.appendChild(tdAction);
+
+        tbody.appendChild(tr);
+      });
+
+      const summary = document.getElementById("profitSummary");
+      if (startBalance !== null && lastBalance !== null) {
+        const profit = lastBalance - startBalance;
+        summary.textContent =
+          `Start Balance: ${startBalance} | Latest Balance: ${lastBalance} | Profit/Loss: ${profit}`;
+      } else {
+        summary.textContent = "No balance data yet.";
+      }
+    }
+
+    // -------- Firestore: other_people_txn (ledger) --------
+    let editingTxnId = null;
+
+    async function fetchAllPeopleTxns() {
+      try {
+        const snap = await getDocs(collection(db, "other_people_txn"));
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        return list;
+      } catch (err) {
+        console.warn("fetchAllPeopleTxns error:", err.message);
+        return [];
+      }
+    }
+
+    async function savePersonTxn(txn) {
+      if (editingTxnId) {
+        await setDoc(doc(db, "other_people_txn", editingTxnId), txn);
+      } else {
+        await addDoc(collection(db, "other_people_txn"), txn);
+      }
+    }
+
+    async function deletePersonTxn(id) {
+      await deleteDoc(doc(db, "other_people_txn", id));
+    }
+
+    function fillPersonForm(txn) {
+      document.getElementById("pDate").value = txn.date || "";
+      document.getElementById("pName").value = txn.name || "";
+      document.getElementById("pIn").value   = txn.cashIn ?? "";
+      document.getElementById("pOut").value  = txn.cashOut ?? "";
+      document.getElementById("pDesc").value = txn.desc || "";
+      editingTxnId = txn.id;
+      document.getElementById("btnSavePerson").textContent = "Update Txn";
+    }
+
+    function clearPersonForm() {
+      document.getElementById("peopleForm").reset();
+      editingTxnId = null;
+      document.getElementById("btnSavePerson").textContent = "Save Txn";
+    }
+
+    async function renderPeopleTableAndUpdateMinus(selectedName) {
+      const data = await fetchAllPeopleTxns();
+
+      const filterSelect = document.getElementById("personFilter");
+      const currentFilter = (selectedName !== undefined) ? selectedName : (filterSelect.value || "");
+
+      // build filter options
+      const namesSet = new Set();
+      data.forEach(txn => { if (txn.name) namesSet.add(txn.name); });
+      filterSelect.innerHTML = '<option value="">All</option>';
+      Array.from(namesSet).sort().forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        if (name === currentFilter) opt.selected = true;
+        filterSelect.appendChild(opt);
+      });
+
+      // sort by name then date
+      data.sort((a,b)=> {
+        const n1 = (a.name || "").localeCompare(b.name || "");
+        if (n1 !== 0) return n1;
+        return (a.date || "").localeCompare(b.date || "");
+      });
+
+      const tbody = document.querySelector("#peopleTable tbody");
+      tbody.innerHTML = "";
+
+      const balancesByName = {};
+      const lastBalanceByName = {};
+
+      data.forEach(txn => {
+        const name = txn.name || "";
+        const cin  = txn.cashIn  || 0;
+        const cout = txn.cashOut || 0;
+
+        if (!(name in balancesByName)) balancesByName[name] = 0;
+        balancesByName[name] += cin - cout;
+        const bal = balancesByName[name];
+        lastBalanceByName[name] = bal;
+
+        if (currentFilter && name !== currentFilter) return;
+
+        const tr = document.createElement("tr");
+
+        const tdDate = document.createElement("td");
+        tdDate.textContent = txn.date || "";
+        tdDate.style.textAlign = "center";
+        tr.appendChild(tdDate);
+
+        const tdName = document.createElement("td");
+        tdName.textContent = name;
+        tdName.style.textAlign = "left";
+        tr.appendChild(tdName);
+
+        const tdDesc = document.createElement("td");
+        tdDesc.textContent = txn.desc || "";
+        tdDesc.style.textAlign = "left";
+        tr.appendChild(tdDesc);
+
+        const tdIn = document.createElement("td");
+        tdIn.textContent = cin || "";
+        tr.appendChild(tdIn);
+
+        const tdOut = document.createElement("td");
+        tdOut.textContent = cout || "";
+        tr.appendChild(tdOut);
+
+        const tdBal = document.createElement("td");
+        tdBal.textContent = bal;
+        tr.appendChild(tdBal);
+
+        const tdAction = document.createElement("td");
+        tdAction.className = "col-actions";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.textContent = "Edit";
+        btnEdit.className = "btn-small btn-secondary";
+        btnEdit.onclick = () => fillPersonForm(txn);
+
+        const btnDel = document.createElement("button");
+        btnDel.textContent = "Delete";
+        btnDel.className = "btn-small btn-danger";
+        btnDel.style.marginLeft = "4px";
+        btnDel.onclick = async () => {
+          if (!confirm("Delete this transaction for " + name + " ?")) return;
+          await deletePersonTxn(txn.id);
+          await renderPeopleTableAndUpdateMinus(currentFilter);
+          alert("Deleted ✔");
+        };
+
+        tdAction.appendChild(btnEdit);
+        tdAction.appendChild(btnDel);
+        tr.appendChild(tdAction);
+
+        tbody.appendChild(tr);
+      });
+
+      let sumOther = 0;
+      Object.values(lastBalanceByName).forEach(v => { sumOther += v; });
+      document.getElementById("minusOther").value = sumOther;
+      recalc();
+    }
+
+    // -------- Excel Export --------
+    async function exportBalancesExcel() {
+      if (typeof XLSX === "undefined") {
+        alert("Excel library မတင်ရသေးပါ (XLSX). Internet/AdBlock စစ်ပေးပါ။");
+        return;
+      }
+      const data = await fetchAllBalances();
+      if (!data.length) {
+        alert("Daily balance data မရှိသေးပါ");
+        return;
+      }
+
+      data.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
+
+      // compute Change like table
+      let prevTotal = null;
+      const rows = [];
+      const header = [
+        "Date","YBBL","YK+","YSCB","YKTB","YTM",
+        "HBBL","HK+","HSCB","HTM","TTM",
+        "Cash","Other Debit","MMK","Rate",
+        "Total (THB)","Other Money (-)","Total_Other","Change"
+      ];
+      rows.push(header);
+
+      data.forEach(row => {
+        let change = "";
+        if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
+          if (prevTotal !== null) {
+            const diff = row.totalOther - prevTotal;
+            change = diff === 0 ? "" : diff;
+          }
+          prevTotal = row.totalOther;
+        }
+        rows.push([
+          row.date || "",
+          row.YBBL || 0,
+          row.YKp  || 0,
+          row.YSCB || 0,
+          row.YKTB || 0,
+          row.YTM  || 0,
+          row.HBBL || 0,
+          row.HKp  || 0,
+          row.HSCB || 0,
+          row.HTM  || 0,
+          row.TTM  || 0,
+          row.cash || 0,
+          row.otherDebit || 0,
+          row.MMK || 0,
+          row.rate || 0,
+          row.total || 0,
+          row.minusOther || 0,
+          row.totalOther || 0,
+          change
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "DailyBalance");
+      XLSX.writeFile(wb, "daily_balance.xlsx");
+    }
+
+    async function exportLedgerExcel() {
+      if (typeof XLSX === "undefined") {
+        alert("Excel library မတင်ရသေးပါ (XLSX). Internet/AdBlock စစ်ပေးပါ။");
+        return;
+      }
+      const data = await fetchAllPeopleTxns();
+      if (!data.length) {
+        alert("Ledger data မရှိသေးပါ");
+        return;
+      }
+
+      // sort by name then date
+      data.sort((a,b)=> {
+        const n1 = (a.name || "").localeCompare(b.name || "");
+        if (n1 !== 0) return n1;
+        return (a.date || "").localeCompare(b.date || "");
+      });
+
+      const balancesByName = {};
+      const rows = [];
+      const header = [
+        "Date","Name","Description","Cash In","Cash Out","Balance (Per Name)"
+      ];
+      rows.push(header);
+
+      data.forEach(txn => {
+        const name = txn.name || "";
+        const cin  = txn.cashIn  || 0;
+        const cout = txn.cashOut || 0;
+
+        if (!(name in balancesByName)) balancesByName[name] = 0;
+        balancesByName[name] += cin - cout;
+        const bal = balancesByName[name];
+
+        rows.push([
+          txn.date || "",
+          name,
+          txn.desc || "",
+          cin,
+          cout,
+          bal
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Ledger");
+      XLSX.writeFile(wb, "other_people_ledger.xlsx");
+    }
+
+    // -------- Events --------
+    document.getElementById("balanceForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      recalc();
+      const data = getFormData();
+      if (!data.date) { alert("Date ထည့်ပါ"); return; }
+      await saveBalanceDoc(data);
+      await renderBalanceTable();
+      alert("Saved to Firebase ✔");
+    });
+
+    document.getElementById("btnClearForm").addEventListener("click", clearForm);
+
+    document.getElementById("btnClearAll").addEventListener("click", async () => {
+      if (!confirm("daily_balance collection ထဲက Data အားလုံး ဖျက်မလား?")) return;
+      await clearAllBalanceDocs();
+      await renderBalanceTable();
+      alert("All daily balance data cleared ✔");
+    });
+
+    document.getElementById("btnExport").addEventListener("click", async () => {
+      const data = await fetchAllBalances();
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = "daily-balance-data.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("btnExportExcel").addEventListener("click", exportBalancesExcel);
+    document.getElementById("btnExportLedgerExcel").addEventListener("click", exportLedgerExcel);
+
+    const autoIds = [
+      "YBBL","YKp","YSCB","YKTB","YTM",
+      "HBBL","HKp","HSCB","HTM","TTM",
+      "cash","otherDebit","MMK","rate"
+    ];
+    autoIds.forEach(id => {
+      document.getElementById(id).addEventListener("input", recalc);
+    });
+
+    document.getElementById("peopleForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const date = document.getElementById("pDate").value;
+      const name = document.getElementById("pName").value.trim();
+      const cashIn  = parseFloat(document.getElementById("pIn").value)  || 0;
+      const cashOut = parseFloat(document.getElementById("pOut").value) || 0;
+      const desc    = document.getElementById("pDesc").value.trim();
+
+      if (!date) { alert("Ledger Date ထည့်ပါ"); return; }
+      if (!name) { alert("Name ထည့်ပါ"); return; }
+      if (cashIn === 0 && cashOut === 0) {
+        alert("Cash In သို့မဟုတ် Cash Out တစ်ခုခု ထည့်ပါ");
+        return;
+      }
+
+      const txn = { date, name, cashIn, cashOut, desc };
+      await savePersonTxn(txn);
+      clearPersonForm();
+      await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
+      alert("Transaction saved ✔");
+    });
+
+    document.getElementById("btnClearPerson").addEventListener("click", clearPersonForm);
+
+    document.getElementById("personFilter").addEventListener("change", (e) => {
+      renderPeopleTableAndUpdateMinus(e.target.value);
+    });
+
+    // -------- Init --------
+    (async () => {
+      try {
+        recalc();
+        await renderBalanceTable();
+        await renderPeopleTableAndUpdateMinus("");
+        console.log("Firebase connected & data loaded.");
+      } catch (err) {
+        console.error("Init error:", err);
+        alert("Firebase connection / rules error ဖြစ်နေတာလို – console ကိုစစ်ကြည့်ပါ");
+      }
+    })();
+  </script>
+</body>
+</html>
