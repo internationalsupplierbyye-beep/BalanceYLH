@@ -65,75 +65,75 @@
         </label>
 
         <label>YBBL
-          <input type="number" id="YBBL" step="1" />
+          <input type="number" id="YBBL" step="0.01" />
         </label>
 
         <label>YK+
-          <input type="number" id="YKp" step="1" />
+          <input type="number" id="YKp" step="0.01" />
         </label>
 
         <label>YSCB
-          <input type="number" id="YSCB" step="1" />
+          <input type="number" id="YSCB" step="0.01" />
         </label>
 
         <label>YKTB
-          <input type="number" id="YKTB" step="1" />
+          <input type="number" id="YKTB" step="0.01" />
         </label>
 
         <label>YTM
-          <input type="number" id="YTM" step="1" />
+          <input type="number" id="YTM" step="0.01" />
         </label>
 
         <label>HBBL
-          <input type="number" id="HBBL" step="1" />
+          <input type="number" id="HBBL" step="0.01" />
         </label>
 
         <label>HK+
-          <input type="number" id="HKp" step="1" />
+          <input type="number" id="HKp" step="0.01" />
         </label>
 
         <label>HSCB
-          <input type="number" id="HSCB" step="1" />
+          <input type="number" id="HSCB" step="0.01" />
         </label>
 
         <label>HTM
-          <input type="number" id="HTM" step="1" />
+          <input type="number" id="HTM" step="0.01" />
         </label>
 
         <label>TTM
-          <input type="number" id="TTM" step="1" />
+          <input type="number" id="TTM" step="0.01" />
         </label>
 
         <label>Cash
-          <input type="number" id="cash" step="1" />
+          <input type="number" id="cash" step="0.01" />
         </label>
 
         <label>Other Debit
-          <input type="number" id="otherDebit" step="1" />
+          <input type="number" id="otherDebit" step="0.01" />
         </label>
 
         <label>MMK Amount
-          <input type="number" id="MMK" step="1" />
+          <input type="number" id="MMK" step="0.01" />
         </label>
 
         <label>Rate / 100,000 MMK (ex: 820)
-          <input type="number" id="rate" step="1" />
+          <input type="number" id="rate" step="0.01" />
         </label>
 
         <label>Total (MMK ➜ THB)
-          <input type="number" id="total" step="1" readonly />
+          <input type="number" id="total" step="0.01" readonly />
         </label>
 
         <label>Total Before Other (THB)
-          <input type="number" id="totalBeforeOther" step="1" readonly />
+          <input type="number" id="totalBeforeOther" step="0.01" readonly />
         </label>
 
         <label>Other People Money (-)
-          <input type="number" id="minusOther" step="1" readonly />
+          <input type="number" id="minusOther" step="0.01" readonly />
         </label>
 
         <label>Total_Other (Final)
-          <input type="number" id="totalOther" step="1" readonly />
+          <input type="number" id="totalOther" step="0.01" readonly />
         </label>
 
         <div class="btn-row">
@@ -147,7 +147,7 @@
 
       <p class="info">
         * မဖြည့်ထားတဲ့ အကွက်တွေကို 0 အနေနဲ့တွက်ပေးထားပါတယ်။<br>
-        * Total (MMK ➜ THB) = round( (MMK ÷ 100,000) × Rate )<br>
+        * Total (MMK ➜ THB) = (MMK ÷ 100,000) × Rate (ဒသမ ၂ နေရာအထိ)<br>
         * Original Total (Before Other) = Bank + Cash + Other Debit + Total(MMK ➜ THB)<br>
         * Ledger ထဲက Balance အကုန်ပေါင်းကို minusOther ထဲ Auto ထည့်ပြီး<br>
         &nbsp;&nbsp;Total_Other = Original Total − Other People Money.
@@ -196,10 +196,10 @@
           <input type="text" id="pName" placeholder="Mi Htoo / Ohmar Win ..." required />
         </label>
         <label>Cash In
-          <input type="number" id="pIn" step="1" />
+          <input type="number" id="pIn" step="0.01" />
         </label>
         <label>Cash Out
-          <input type="number" id="pOut" step="1" />
+          <input type="number" id="pOut" step="0.01" />
         </label>
         <label>Description
           <input type="text" id="pDesc" placeholder="Sep salary / Loan / Refund ..." />
@@ -278,6 +278,22 @@
       return isNaN(v) ? 0 : v;
     }
 
+    // round to 2 decimals (number)
+    function round2(v) {
+      if (v === null || v === undefined || isNaN(v)) return 0;
+      return Math.round(v * 100) / 100;
+    }
+
+    // format to "0.00"
+    function format2(v) {
+      return round2(Number(v)).toFixed(2);
+    }
+
+    function cellFormat(v) {
+      if (v === undefined || v === null || v === "") return "";
+      return format2(v);
+    }
+
     // -------- Main balance calc --------
     function recalc() {
       const bankFields = [
@@ -293,17 +309,16 @@
 
       let totalFromMMK = 0;
       if (mmk !== 0 && rate !== 0) {
-        totalFromMMK = Math.round((mmk / 100000) * rate);
+        totalFromMMK = round2((mmk / 100000) * rate);
       }
-      document.getElementById("total").value = totalFromMMK;
 
-      // Original Total (Before Other)
-      const totalAll = sumTHB + totalFromMMK;
-      document.getElementById("totalBeforeOther").value = totalAll;
-
+      const totalAll = round2(sumTHB + totalFromMMK);
       const minusOther = numFrom("minusOther");
-      const finalTotal = totalAll - minusOther;
-      document.getElementById("totalOther").value = finalTotal;
+      const finalTotal = round2(totalAll - minusOther);
+
+      document.getElementById("total").value            = format2(totalFromMMK);
+      document.getElementById("totalBeforeOther").value = format2(totalAll);
+      document.getElementById("totalOther").value       = format2(finalTotal);
     }
 
     function getFormData() {
@@ -323,10 +338,10 @@
         otherDebit: numFrom("otherDebit"),
         MMK: numFrom("MMK"),
         rate: numFrom("rate"),
-        total: numFrom("total"),
-        totalBeforeOther: numFrom("totalBeforeOther"),
-        minusOther: numFrom("minusOther"),
-        totalOther: numFrom("totalOther")
+        total: round2(numFrom("total")),
+        totalBeforeOther: round2(numFrom("totalBeforeOther")),
+        minusOther: round2(numFrom("minusOther")),
+        totalOther: round2(numFrom("totalOther"))
       };
     }
 
@@ -342,7 +357,7 @@
           el.value = row.date || "";
         } else {
           const v = row[id];
-          el.value = (v === undefined || v === null) ? "" : v;
+          el.value = (v === undefined || v === null) ? "" : format2(v);
         }
       });
       recalc();
@@ -401,7 +416,7 @@
         ];
         let sumTHB = 0;
         bankFields.forEach(id => { sumTHB += (row[id] || 0); });
-        const totalFromMMK = row.total || 0;
+        const totalFromMMK  = row.total || 0;
         const originalTotal =
           (typeof row.totalBeforeOther === "number")
             ? row.totalBeforeOther
@@ -419,23 +434,29 @@
             td.textContent = v || "";
             td.style.textAlign = "center";
           } else {
-            td.textContent = (v === undefined || v === null) ? "" : v;
+            td.textContent = (v === undefined || v === null) ? "" : format2(v);
           }
           tr.appendChild(td);
         });
 
         // Original Total column
         const tdOrig = document.createElement("td");
-        tdOrig.textContent = originalTotal;
+        tdOrig.textContent = format2(originalTotal);
         tr.appendChild(tdOrig);
 
         // Other Money, Total_Other
         const tdMinus = document.createElement("td");
-        tdMinus.textContent = (row.minusOther === undefined || row.minusOther === null) ? "" : row.minusOther;
+        tdMinus.textContent =
+          (row.minusOther === undefined || row.minusOther === null)
+            ? ""
+            : format2(row.minusOther);
         tr.appendChild(tdMinus);
 
         const tdTotalOther = document.createElement("td");
-        tdTotalOther.textContent = (row.totalOther === undefined || row.totalOther === null) ? "" : row.totalOther;
+        tdTotalOther.textContent =
+          (row.totalOther === undefined || row.totalOther === null)
+            ? ""
+            : format2(row.totalOther);
         tr.appendChild(tdTotalOther);
 
         // Change column
@@ -444,7 +465,7 @@
         if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
           if (prevTotal !== null) {
             const diff = row.totalOther - prevTotal;
-            diffText = diff === 0 ? "" : diff;
+            diffText = diff === 0 ? "" : format2(diff);
           }
           prevTotal = row.totalOther;
           if (startBalance === null) startBalance = row.totalOther;
@@ -483,7 +504,7 @@
       if (startBalance !== null && lastBalance !== null) {
         const profit = lastBalance - startBalance;
         summary.textContent =
-          `Start Balance: ${startBalance} | Latest Balance: ${lastBalance} | Profit/Loss: ${profit}`;
+          `Start Balance: ${format2(startBalance)} | Latest Balance: ${format2(lastBalance)} | Profit/Loss: ${format2(profit)}`;
       } else {
         summary.textContent = "No balance data yet.";
       }
@@ -519,8 +540,8 @@
     function fillPersonForm(txn) {
       document.getElementById("pDate").value = txn.date || "";
       document.getElementById("pName").value = txn.name || "";
-      document.getElementById("pIn").value   = txn.cashIn ?? "";
-      document.getElementById("pOut").value  = txn.cashOut ?? "";
+      document.getElementById("pIn").value   = (txn.cashIn  ?? "") === "" ? "" : format2(txn.cashIn);
+      document.getElementById("pOut").value  = (txn.cashOut ?? "") === "" ? "" : format2(txn.cashOut);
       document.getElementById("pDesc").value = txn.desc || "";
       editingTxnId = txn.id;
       document.getElementById("btnSavePerson").textContent = "Update Txn";
@@ -593,15 +614,15 @@
         tr.appendChild(tdDesc);
 
         const tdIn = document.createElement("td");
-        tdIn.textContent = cin || "";
+        tdIn.textContent = cin ? format2(cin) : "";
         tr.appendChild(tdIn);
 
         const tdOut = document.createElement("td");
-        tdOut.textContent = cout || "";
+        tdOut.textContent = cout ? format2(cout) : "";
         tr.appendChild(tdOut);
 
         const tdBal = document.createElement("td");
-        tdBal.textContent = bal;
+        tdBal.textContent = format2(bal);
         tr.appendChild(tdBal);
 
         const tdAction = document.createElement("td");
@@ -632,7 +653,7 @@
 
       let sumOther = 0;
       Object.values(lastBalanceByName).forEach(v => { sumOther += v; });
-      document.getElementById("minusOther").value = sumOther;
+      document.getElementById("minusOther").value = format2(sumOther);
       recalc();
     }
 
@@ -678,32 +699,32 @@
         if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
           if (prevTotal !== null) {
             const diff = row.totalOther - prevTotal;
-            change = diff === 0 ? "" : diff;
+            change = diff === 0 ? "" : format2(diff);
           }
           prevTotal = row.totalOther;
         }
 
         rows.push([
           row.date || "",
-          row.YBBL || 0,
-          row.YKp  || 0,
-          row.YSCB || 0,
-          row.YKTB || 0,
-          row.YTM  || 0,
-          row.HBBL || 0,
-          row.HKp  || 0,
-          row.HSCB || 0,
-          row.HTM  || 0,
-          row.TTM  || 0,
-          row.cash || 0,
-          row.otherDebit || 0,
-          row.MMK || 0,
-          row.rate || 0,
-          row.total || 0,
-          originalTotal,
-          row.minusOther || 0,
-          row.totalOther || 0,
-          change
+          round2(row.YBBL || 0),
+          round2(row.YKp  || 0),
+          round2(row.YSCB || 0),
+          round2(row.YKTB || 0),
+          round2(row.YTM  || 0),
+          round2(row.HBBL || 0),
+          round2(row.HKp  || 0),
+          round2(row.HSCB || 0),
+          round2(row.HTM  || 0),
+          round2(row.TTM  || 0),
+          round2(row.cash || 0),
+          round2(row.otherDebit || 0),
+          round2(row.MMK || 0),
+          round2(row.rate || 0),
+          round2(row.total || 0),
+          round2(originalTotal),
+          round2(row.minusOther || 0),
+          round2(row.totalOther || 0),
+          change === "" ? "" : round2(parseFloat(change))
         ]);
       });
 
@@ -750,9 +771,9 @@
           txn.date || "",
           name,
           txn.desc || "",
-          cin,
-          cout,
-          bal
+          round2(cin),
+          round2(cout),
+          round2(bal)
         ]);
       });
 
@@ -822,7 +843,7 @@
         return;
       }
 
-      const txn = { date, name, cashIn, cashOut, desc };
+      const txn = { date, name, cashIn: round2(cashIn), cashOut: round2(cashOut), desc };
       await savePersonTxn(txn);
       clearPersonForm();
       await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
