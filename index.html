@@ -5,78 +5,66 @@
   <title>Daily Balance (Firebase)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ===================== CSS ===================== -->
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     body { margin:0; padding:0; background:#f5f7fb; color:#111827; }
     header { background:#1b4ba0; color:#fff; padding:16px 24px; }
     header h1 { margin:0; font-size:20px; }
     header p { margin:4px 0 0 0; font-size:13px; opacity:0.9; }
     main { padding:16px; max-width:1300px; margin:0 auto 40px auto; }
-    .card {
-      background:#fff; border-radius:10px; padding:16px; margin-bottom:16px;
-      box-shadow:0 1px 4px rgba(15,23,42,0.08);
-    }
+    .card { background:#fff; border-radius:10px; padding:16px; margin-bottom:16px; box-shadow:0 1px 4px rgba(15,23,42,0.08); }
     .card h2 { margin:0 0 8px 0; font-size:18px; }
     .card small { display:block; font-size:12px; color:#4b5563; margin-bottom:12px; }
-
-    form {
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(120px,1fr));
-      gap:8px 12px;
-      align-items:flex-end;
-    }
+    form { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:8px 12px; align-items:flex-end; }
     label { display:flex; flex-direction:column; gap:4px; font-size:13px; }
     input[type="number"], input[type="date"], input[type="text"] {
-      padding:6px 8px;
-      border-radius:6px;
-      border:1px solid #d1d5db;
-      font-size:13px;
+        padding:6px 8px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
     }
     input[type="number"] { text-align:right; }
-    input:focus {
-      outline:2px solid #1b4ba0;
-      outline-offset:1px;
-      border-color:#1b4ba0;
-    }
+    input:focus { outline:2px solid #1b4ba0; outline-offset:1px; border-color:#1b4ba0; }
     select {
-      padding:4px 6px; border-radius:6px; border:1px solid #d1d5db;
-      font-size:13px; background:#fff;
+        padding:4px 6px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
+        background:#fff;
     }
-
     .btn-row { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
-    button {
-      border:none; border-radius:6px; padding:6px 12px;
-      font-size:13px; cursor:pointer;
-    }
+    button { border:none; border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer; }
     .btn-primary { background:#1b4ba0; color:#fff; }
     .btn-secondary { background:#e5e7eb; color:#111827; }
     .btn-danger { background:#dc2626; color:#fff; }
     .btn-small { padding:4px 8px; font-size:11px; }
 
     .table-container {
-      overflow-x:auto;
-      overflow-y:auto;     /* vertical scroll */
-      max-height:360px;    /* ~10 rows visible, rest scroll */
+        max-height: 360px;
+        overflow-y: auto;
+        overflow-x: auto;
     }
 
     table { border-collapse:collapse; width:100%; min-width:1100px; font-size:12px; }
-    thead { background:#1d4ed8; color:#fff; position:sticky; top:0; z-index:1; }
-    th, td {
-      border:1px solid #e5e7eb;
-      padding:4px 6px;
-      text-align:right;
-      white-space:nowrap;
-    }
+    thead { background:#1d4ed8; color:#fff; position:sticky; top:0; }
+    th, td { border:1px solid #e5e7eb; padding:4px 6px; text-align:right; white-space:nowrap; }
     th:first-child, td:first-child { text-align:center; }
     tbody tr:nth-child(even){ background:#f9fafb; }
     tbody tr:hover { background:#e5f2ff; }
     .col-date { min-width:90px; }
     .col-actions { min-width:120px; text-align:center; }
+
     .info { font-size:11px; color:#6b7280; margin-top:8px; }
+
+    /* Ledger Summary (Selected Balance + Total All) */
+    .ledger-summary-main {
+      display:block;
+      font-size:16px;
+      font-weight:700;
+      margin-bottom:6px;
+      color:#000;
+    }
+
+    .ledger-summary-sub {
+      display:block;
+      font-size:14px;
+      margin-top:4px;
+      color:#1b4ba0;
+    }
   </style>
 
   <!-- Excel Export Library -->
@@ -89,12 +77,11 @@
   </header>
 
   <main>
-    <!-- =============== MAIN BALANCE FORM =============== -->
+    <!-- MAIN BALANCE FORM -->
     <section class="card">
       <h2>Daily Balance (Main)</h2>
       <small>
-        Bank / Cash / Other Debit + မြန်မာငွေ (MMK) နဲ့ Exchange Rate ထည့်ပါ။
-        Total / Original Total / Total_Other ကို အော်တိုတွက်ပေးမယ်။
+        Bank / Cash / Other Debit + မြန်မာငွေ (MMK) နဲ့ Exchange Rate ထည့်ပါ။ Total / Original Total / Total_Other ကို အော်တိုတွက်ပေးမယ်။
       </small>
 
       <form id="balanceForm">
@@ -102,19 +89,53 @@
           <input type="date" id="date" required />
         </label>
 
-        <!-- bank / cash fields (step=0.01) -->
-        <label>YBBL <input type="number" id="YBBL" step="0.01" /></label>
-        <label>YK+  <input type="number" id="YKp"  step="0.01" /></label>
-        <label>YSCB <input type="number" id="YSCB" step="0.01" /></label>
-        <label>YKTB <input type="number" id="YKTB" step="0.01" /></label>
-        <label>YTM  <input type="number" id="YTM"  step="0.01" /></label>
-        <label>HBBL <input type="number" id="HBBL" step="0.01" /></label>
-        <label>HK+  <input type="number" id="HKp"  step="0.01" /></label>
-        <label>HSCB <input type="number" id="HSCB" step="0.01" /></label>
-        <label>HTM  <input type="number" id="HTM"  step="0.01" /></label>
-        <label>TTM  <input type="number" id="TTM"  step="0.01" /></label>
-        <label>Cash <input type="number" id="cash" step="0.01" /></label>
-        <label>Other Debit <input type="number" id="otherDebit" step="0.01" /></label>
+        <label>YBBL
+          <input type="number" id="YBBL" step="0.01" />
+        </label>
+
+        <label>YK+
+          <input type="number" id="YKp" step="0.01" />
+        </label>
+
+        <label>YSCB
+          <input type="number" id="YSCB" step="0.01" />
+        </label>
+
+        <label>YKTB
+          <input type="number" id="YKTB" step="0.01" />
+        </label>
+
+        <label>YTM
+          <input type="number" id="YTM" step="0.01" />
+        </label>
+
+        <label>HBBL
+          <input type="number" id="HBBL" step="0.01" />
+        </label>
+
+        <label>HK+
+          <input type="number" id="HKp" step="0.01" />
+        </label>
+
+        <label>HSCB
+          <input type="number" id="HSCB" step="0.01" />
+        </label>
+
+        <label>HTM
+          <input type="number" id="HTM" step="0.01" />
+        </label>
+
+        <label>TTM
+          <input type="number" id="TTM" step="0.01" />
+        </label>
+
+        <label>Cash
+          <input type="number" id="cash" step="0.01" />
+        </label>
+
+        <label>Other Debit
+          <input type="number" id="otherDebit" step="0.01" />
+        </label>
 
         <label>MMK Amount
           <input type="number" id="MMK" step="0.01" />
@@ -158,7 +179,7 @@
       </p>
     </section>
 
-    <!-- =============== DAILY BALANCE TABLE =============== -->
+    <!-- DAILY BALANCE TABLE -->
     <section class="card">
       <h2>Daily Balance List (From Firebase)</h2>
       <div class="table-container">
@@ -184,13 +205,12 @@
       <p class="info" id="profitSummary"></p>
     </section>
 
-    <!-- =============== OTHER PEOPLE MONEY LEDGER =============== -->
+    <!-- OTHER PEOPLE MONEY LEDGER -->
     <section class="card">
       <h2>Other People Money Ledger</h2>
       <small>
-        လူတယောက်ချင်း Transaction (Date, Cash In, Cash Out, Description) သိမ်းပြီး
-        Name တယောက်စီ Running Balance ကို တွက်ပြမယ်။
-        Name Filter နဲ့လည်း စိတ်ကြိုက်ရွေးပြီးကြည့်လို့ရမယ်။
+        လူတယောက်ချင်း Transaction (Date, Cash In, Cash Out, Description) အစုံလင် သိမ်းပြီး Name တယောက်စီ Running Balance ကို တွက်ပြမယ်။
+        အပေါ်မှာ Name Filter နဲ့လည်း စိတ်ကြိုက်ရွေးပြီးကြည့်လို့ရမယ်။
       </small>
 
       <form id="peopleForm">
@@ -244,16 +264,27 @@
         </table>
       </div>
 
+      <!-- Summary lines -->
+      <p class="info">
+        <span class="ledger-summary-main">
+          👤 Selected Person Balance:
+          <span id="ledgerSelectedBalance">All persons</span>
+        </span>
+        <span class="ledger-summary-sub">
+          💰 Total Other People Money (All):
+          <span id="ledgerTotalAll">0.00</span>
+        </span>
+      </p>
+
+      <!-- Explanation -->
       <p class="info">
         * Name တယောက်ချင်း Filter ထောက်ပြီး သက်ဆိုင်တဲ့ Transaction တွေကိုသာ ကြည့်လို့ရမယ်။<br>
-        * Minus Other Money ကတော့ Name တယောက်စီနောက်ဆုံး Balance အားလုံး ပေါင်းထားတာကို သုံးပေးတယ်။<br><br>
-        <strong>💰 Total Other People Money (All): <span id="ledgerTotalAll">0.00</span></strong><br>
-        <strong>👤 Selected Person Balance: <span id="ledgerSelectedBalance">-</span></strong>
+        * Minus Other Money ကတော့ Name တယောက်စီနောက်ဆုံး Balance အားလုံး ပေါင်းထားတာကို သုံးပေးတယ်။
       </p>
     </section>
   </main>
 
-  <!-- ===================== JS (Firebase + Logic) ===================== -->
+  <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -279,21 +310,23 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    /* ---------- Helpers ---------- */
+    // -------- Helper --------
     function numFrom(id) {
       const v = parseFloat(document.getElementById(id).value);
       return isNaN(v) ? 0 : v;
     }
-    function format2(v) {
-      if (v === null || v === undefined || isNaN(v)) return "";
-      return Number(v).toFixed(2);
-    }
-    function round2(v) {
-      if (v === null || v === undefined || isNaN(v)) return 0;
-      return Number(Number(v).toFixed(2));
+
+    function format2(value) {
+      if (value === null || value === undefined || isNaN(value)) return "";
+      return Number(value).toFixed(2);
     }
 
-    /* ---------- Main balance calc ---------- */
+    function round2(value) {
+      if (value === null || value === undefined || isNaN(value)) return 0;
+      return Number(Number(value).toFixed(2));
+    }
+
+    // -------- Main balance calc --------
     function recalc() {
       const bankFields = [
         "YBBL","YKp","YSCB","YKTB","YTM",
@@ -357,7 +390,11 @@
           el.value = row.date || "";
         } else {
           const v = row[id];
-          el.value = (v === undefined || v === null || v === "") ? "" : format2(v);
+          if (v === undefined || v === null || v === "") {
+            el.value = "";
+          } else {
+            el.value = format2(v);
+          }
         }
       });
       recalc();
@@ -368,7 +405,7 @@
       recalc();
     }
 
-    /* ---------- Firestore: daily_balance ---------- */
+    // -------- Firestore: daily_balance --------
     async function fetchAllBalances() {
       try {
         const snap = await getDocs(collection(db, "daily_balance"));
@@ -380,12 +417,15 @@
         return [];
       }
     }
+
     async function saveBalanceDoc(data) {
       await addDoc(collection(db, "daily_balance"), data);
     }
+
     async function deleteBalance(id) {
       await deleteDoc(doc(db, "daily_balance", id));
     }
+
     async function clearAllBalanceDocs() {
       const snap = await getDocs(collection(db, "daily_balance"));
       const tasks = [];
@@ -504,7 +544,7 @@
       }
     }
 
-    /* ---------- Firestore: other_people_txn (ledger) ---------- */
+    // -------- Firestore: other_people_txn (ledger) --------
     let editingTxnId = null;
 
     async function fetchAllPeopleTxns() {
@@ -518,6 +558,7 @@
         return [];
       }
     }
+
     async function savePersonTxn(txn) {
       if (editingTxnId) {
         await setDoc(doc(db, "other_people_txn", editingTxnId), txn);
@@ -525,6 +566,7 @@
         await addDoc(collection(db, "other_people_txn"), txn);
       }
     }
+
     async function deletePersonTxn(id) {
       await deleteDoc(doc(db, "other_people_txn", id));
     }
@@ -532,12 +574,13 @@
     function fillPersonForm(txn) {
       document.getElementById("pDate").value = txn.date || "";
       document.getElementById("pName").value = txn.name || "";
-      document.getElementById("pIn").value   = (txn.cashIn  ?? "") === "" ? "" : format2(txn.cashIn);
-      document.getElementById("pOut").value  = (txn.cashOut ?? "") === "" ? "" : format2(txn.cashOut);
+      document.getElementById("pIn").value   = txn.cashIn  ?? "";
+      document.getElementById("pOut").value  = txn.cashOut ?? "";
       document.getElementById("pDesc").value = txn.desc || "";
       editingTxnId = txn.id;
       document.getElementById("btnSavePerson").textContent = "Update Txn";
     }
+
     function clearPersonForm() {
       document.getElementById("peopleForm").reset();
       editingTxnId = null;
@@ -550,6 +593,7 @@
       const filterSelect = document.getElementById("personFilter");
       const currentFilter = (selectedName !== undefined) ? selectedName : (filterSelect.value || "");
 
+      // build filter options
       const namesSet = new Set();
       data.forEach(txn => { if (txn.name) namesSet.add(txn.name); });
       filterSelect.innerHTML = '<option value="">All</option>';
@@ -561,6 +605,7 @@
         filterSelect.appendChild(opt);
       });
 
+      // sort by name then date
       data.sort((a,b)=> {
         const n1 = (a.name || "").localeCompare(b.name || "");
         if (n1 !== 0) return n1;
@@ -603,11 +648,11 @@
         tr.appendChild(tdDesc);
 
         const tdIn = document.createElement("td");
-        tdIn.textContent = cin ? format2(cin) : "";
+        tdIn.textContent = cin || "";
         tr.appendChild(tdIn);
 
         const tdOut = document.createElement("td");
-        tdOut.textContent = cout ? format2(cout) : "";
+        tdOut.textContent = cout || "";
         tr.appendChild(tdOut);
 
         const tdBal = document.createElement("td");
@@ -640,7 +685,6 @@
         tbody.appendChild(tr);
       });
 
-      // Total of all people
       let sumOther = 0;
       Object.values(lastBalanceByName).forEach(v => { sumOther += v; });
       document.getElementById("minusOther").value = format2(sumOther);
@@ -649,26 +693,31 @@
       const totalAllEl = document.getElementById("ledgerTotalAll");
       if (totalAllEl) totalAllEl.textContent = format2(sumOther);
 
-      // Selected person balance text
+      // Selected person current balance (show name + balance + Baht)
       let selectedBalanceText = "-";
+
       if (currentFilter && lastBalanceByName[currentFilter] !== undefined) {
         const bal = lastBalanceByName[currentFilter];
         selectedBalanceText = `${currentFilter} : ${format2(bal)} ဘတ်`;
       } else if (!currentFilter) {
         selectedBalanceText = "All persons";
       }
+
       const selBalEl = document.getElementById("ledgerSelectedBalance");
       if (selBalEl) selBalEl.textContent = selectedBalanceText;
     }
 
-    /* ---------- Excel Export ---------- */
+    // -------- Excel Export --------
     async function exportBalancesExcel() {
       if (typeof XLSX === "undefined") {
         alert("Excel library မတင်ရသေးပါ (XLSX). Internet/AdBlock စစ်ပေးပါ။");
         return;
       }
       const data = await fetchAllBalances();
-      if (!data.length) { alert("Daily balance data မရှိသေးပါ"); return; }
+      if (!data.length) {
+        alert("Daily balance data မရှိသေးပါ");
+        return;
+      }
 
       data.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
 
@@ -741,7 +790,10 @@
         return;
       }
       const data = await fetchAllPeopleTxns();
-      if (!data.length) { alert("Ledger data မရှိသေးပါ"); return; }
+      if (!data.length) {
+        alert("Ledger data မရှိသေးပါ");
+        return;
+      }
 
       data.sort((a,b)=> {
         const n1 = (a.name || "").localeCompare(b.name || "");
@@ -781,7 +833,7 @@
       XLSX.writeFile(wb, "other_people_ledger.xlsx");
     }
 
-    /* ---------- Events ---------- */
+    // -------- Events --------
     document.getElementById("balanceForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       recalc();
@@ -841,13 +893,7 @@
         return;
       }
 
-      const txn = {
-        date,
-        name,
-        cashIn: round2(cashIn),
-        cashOut: round2(cashOut),
-        desc
-      };
+      const txn = { date, name, cashIn, cashOut, desc };
       await savePersonTxn(txn);
       clearPersonForm();
       await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
@@ -860,7 +906,7 @@
       renderPeopleTableAndUpdateMinus(e.target.value);
     });
 
-    /* ---------- Init ---------- */
+    // -------- Init --------
     (async () => {
       try {
         recalc();
