@@ -15,17 +15,21 @@
     .card { background:#fff; border-radius:10px; padding:16px; margin-bottom:16px; box-shadow:0 1px 4px rgba(15,23,42,0.08); }
     .card h2 { margin:0 0 8px 0; font-size:18px; }
     .card small { display:block; font-size:12px; color:#4b5563; margin-bottom:12px; }
+
     form { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:8px 12px; align-items:flex-end; }
     label { display:flex; flex-direction:column; gap:4px; font-size:13px; }
+
     input[type="number"], input[type="date"], input[type="text"] {
-        padding:6px 8px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
+      padding:6px 8px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
     }
     input[type="number"] { text-align:right; }
     input:focus { outline:2px solid #1b4ba0; outline-offset:1px; border-color:#1b4ba0; }
+
     select {
-        padding:4px 6px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
-        background:#fff;
+      padding:4px 6px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
+      background:#fff;
     }
+
     .btn-row { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
     button { border:none; border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer; }
     .btn-primary { background:#1b4ba0; color:#fff; }
@@ -33,12 +37,7 @@
     .btn-danger { background:#dc2626; color:#fff; }
     .btn-small { padding:4px 8px; font-size:11px; }
 
-    .table-container {
-        max-height: 360px;
-        overflow-y: auto;
-        overflow-x: auto;
-    }
-
+    .table-container { max-height: 360px; overflow-y: auto; overflow-x: auto; }
     table { border-collapse:collapse; width:100%; min-width:1100px; font-size:12px; }
     thead { background:#1d4ed8; color:#fff; position:sticky; top:0; }
     th, td { border:1px solid #e5e7eb; padding:4px 6px; text-align:right; white-space:nowrap; }
@@ -47,23 +46,35 @@
     tbody tr:hover { background:#e5f2ff; }
     .col-date { min-width:90px; }
     .col-actions { min-width:120px; text-align:center; }
-
     .info { font-size:11px; color:#6b7280; margin-top:8px; }
 
-    /* Ledger Summary (Selected Balance + Total All) */
-    .ledger-summary-main {
-      display:block;
-      font-size:16px;
-      font-weight:700;
-      margin-bottom:6px;
-      color:#000;
-    }
+    /* Ledger Summary */
+    .ledger-summary-main { display:block; font-size:16px; font-weight:700; margin-bottom:6px; color:#000; }
+    .ledger-summary-sub  { display:block; font-size:14px; margin-top:4px; color:#1b4ba0; }
 
-    .ledger-summary-sub {
-      display:block;
-      font-size:14px;
-      margin-top:4px;
-      color:#1b4ba0;
+    /* ✅ MMK lines (full width list only) */
+    .mmk-lines-wrap { grid-column: 1 / -1; }
+    .mmk-lines-list { margin-top:8px; display:flex; flex-direction:column; gap:6px; }
+
+    /* ✅ MMK row inputs compact like other inputs */
+    .mmk-line{
+      display:grid;
+      grid-template-columns: 120px 1fr 60px; /* Amount / Note / Remove */
+      gap:6px;
+      align-items:end;
+    }
+    .mmk-line input[type="number"],
+    .mmk-line input[type="text"]{
+      width:100%;
+      padding:6px 8px;      /* same as others */
+      font-size:13px;       /* same as others */
+      border-radius:6px;
+      border:1px solid #d1d5db;
+    }
+    .mmk-line button{
+      padding:6px 8px;      /* compact */
+      font-size:11px;
+      border-radius:6px;
     }
   </style>
 
@@ -137,9 +148,25 @@
           <input type="number" id="otherDebit" step="0.01" />
         </label>
 
-        <label>MMK Amount
-          <input type="number" id="MMK" step="0.01" />
+        <!-- ✅ MMK TOTAL (same size like others) -->
+        <label>MMK Amount (Total)
+          <input type="number" id="MMK" step="0.01" readonly />
         </label>
+
+        <!-- ✅ Add MMK button as normal column -->
+        <div style="display:flex; align-items:flex-end;">
+          <button type="button" class="btn-secondary" id="btnAddMMKLine" style="height:32px; width:100%;">
+            + Add MMK
+          </button>
+        </div>
+
+        <!-- ✅ MMK Lines list (compact inputs) -->
+        <div class="mmk-lines-wrap">
+          <div id="mmkLines" class="mmk-lines-list"></div>
+          <p class="info" style="margin:8px 0 0 0;">
+            * MMK ကို row အလိုက် ထည့်ပြီး (+) ပေါင်းစုထားတဲ့ Total MMK ကို MMK Amount အကွက်ထဲ Auto ပြမယ်။
+          </p>
+        </div>
 
         <label>Rate / 100,000 MMK (ex: 820)
           <input type="number" id="rate" step="0.01" />
@@ -276,7 +303,6 @@
         </span>
       </p>
 
-      <!-- Explanation -->
       <p class="info">
         * Name တယောက်ချင်း Filter ထောက်ပြီး သက်ဆိုင်တဲ့ Transaction တွေကိုသာ ကြည့်လို့ရမယ်။<br>
         * Minus Other Money ကတော့ Name တယောက်စီနောက်ဆုံး Balance အားလုံး ပေါင်းထားတာကို သုံးပေးတယ်။
@@ -284,7 +310,6 @@
     </section>
   </main>
 
-  <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
@@ -315,15 +340,76 @@
       const v = parseFloat(document.getElementById(id).value);
       return isNaN(v) ? 0 : v;
     }
-
     function format2(value) {
       if (value === null || value === undefined || isNaN(value)) return "";
       return Number(value).toFixed(2);
     }
-
     function round2(value) {
       if (value === null || value === undefined || isNaN(value)) return 0;
       return Number(Number(value).toFixed(2));
+    }
+
+    // ✅ MMK Multi-line state
+    let mmkItems = []; // [{ amount:number, note:string }]
+
+    function renderMMKLines() {
+      const wrap = document.getElementById("mmkLines");
+      if (!wrap) return;
+      wrap.innerHTML = "";
+
+      if (mmkItems.length === 0) {
+        const hint = document.createElement("div");
+        hint.className = "info";
+        hint.textContent = "MMK row မရှိသေးပါ — + Add MMK ကိုနှိပ်ပြီး ထည့်ပါ။";
+        wrap.appendChild(hint);
+        document.getElementById("MMK").value = format2(0);
+        return;
+      }
+
+      mmkItems.forEach((it, idx) => {
+        const row = document.createElement("div");
+        row.className = "mmk-line";
+
+        const inpAmt = document.createElement("input");
+        inpAmt.type = "number";
+        inpAmt.step = "0.01";
+        inpAmt.placeholder = "MMK";
+        inpAmt.value = (it.amount ?? "");
+        inpAmt.oninput = () => {
+          const v = parseFloat(inpAmt.value);
+          mmkItems[idx].amount = isNaN(v) ? 0 : v;
+          syncMMKTotal();
+        };
+
+        const inpNote = document.createElement("input");
+        inpNote.type = "text";
+        inpNote.placeholder = "Note";
+        inpNote.value = (it.note ?? "");
+        inpNote.oninput = () => { mmkItems[idx].note = inpNote.value; };
+
+        const btnDel = document.createElement("button");
+        btnDel.type = "button";
+        btnDel.className = "btn-danger btn-small";
+        btnDel.textContent = "Del";
+        btnDel.onclick = () => {
+          mmkItems.splice(idx, 1);
+          renderMMKLines();
+          syncMMKTotal();
+        };
+
+        row.appendChild(inpAmt);
+        row.appendChild(inpNote);
+        row.appendChild(btnDel);
+        wrap.appendChild(row);
+      });
+
+      syncMMKTotal(false);
+    }
+
+    function syncMMKTotal(recalcAfter = true) {
+      const total = mmkItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
+      document.getElementById("MMK").value = format2(round2(total));
+      if (recalcAfter) recalc();
     }
 
     // -------- Main balance calc --------
@@ -340,9 +426,8 @@
       const rate = numFrom("rate");
 
       let totalFromMMK = 0;
-      if (mmk !== 0 && rate !== 0) {
-        totalFromMMK = (mmk / 100000) * rate;
-      }
+      if (mmk !== 0 && rate !== 0) totalFromMMK = (mmk / 100000) * rate;
+
       const totalFromMMK2 = round2(totalFromMMK);
       document.getElementById("total").value = format2(totalFromMMK2);
 
@@ -374,34 +459,48 @@
         total: round2(numFrom("total")),
         totalBeforeOther: round2(numFrom("totalBeforeOther")),
         minusOther: round2(numFrom("minusOther")),
-        totalOther: round2(numFrom("totalOther"))
+        totalOther: round2(numFrom("totalOther")),
+        mmkItems: mmkItems.map(x => ({
+          amount: round2(parseFloat(x.amount) || 0),
+          note: (x.note || "").trim()
+        }))
       };
     }
 
     function fillForm(row) {
       const ids = [
         "date","YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM",
-        "cash","otherDebit","MMK","rate","total","totalBeforeOther","minusOther","totalOther"
+        "cash","otherDebit","rate","total","totalBeforeOther","minusOther","totalOther"
       ];
       ids.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        if (id === "date") {
-          el.value = row.date || "";
-        } else {
+        if (id === "date") el.value = row.date || "";
+        else {
           const v = row[id];
-          if (v === undefined || v === null || v === "") {
-            el.value = "";
-          } else {
-            el.value = format2(v);
-          }
+          el.value = (v === undefined || v === null || v === "") ? "" : format2(v);
         }
       });
+
+      mmkItems = Array.isArray(row.mmkItems)
+        ? row.mmkItems.map(x => ({ amount: parseFloat(x.amount) || 0, note: x.note || "" }))
+        : [];
+
+      const oldMMK = parseFloat(row.MMK);
+      if (mmkItems.length === 0 && !isNaN(oldMMK) && oldMMK !== 0) {
+        mmkItems = [{ amount: oldMMK, note: "Imported" }];
+      }
+
+      renderMMKLines();
+      syncMMKTotal();
       recalc();
     }
 
     function clearForm() {
       document.getElementById("balanceForm").reset();
+      mmkItems = [];
+      renderMMKLines();
+      syncMMKTotal();
       recalc();
     }
 
@@ -452,6 +551,7 @@
         ];
         let sumTHB = 0;
         bankFields.forEach(id => { sumTHB += (row[id] || 0); });
+
         const totalFromMMK = row.total || 0;
         const originalTotal =
           (typeof row.totalBeforeOther === "number")
@@ -470,8 +570,7 @@
             td.textContent = v || "";
             td.style.textAlign = "center";
           } else {
-            td.textContent =
-              (v === undefined || v === null || v === "") ? "" : format2(v);
+            td.textContent = (v === undefined || v === null || v === "") ? "" : format2(v);
           }
           tr.appendChild(td);
         });
@@ -481,17 +580,11 @@
         tr.appendChild(tdOrig);
 
         const tdMinus = document.createElement("td");
-        tdMinus.textContent =
-          (row.minusOther === undefined || row.minusOther === null)
-            ? ""
-            : format2(row.minusOther);
+        tdMinus.textContent = (row.minusOther === undefined || row.minusOther === null) ? "" : format2(row.minusOther);
         tr.appendChild(tdMinus);
 
         const tdTotalOther = document.createElement("td");
-        tdTotalOther.textContent =
-          (row.totalOther === undefined || row.totalOther === null)
-            ? ""
-            : format2(row.totalOther);
+        tdTotalOther.textContent = (row.totalOther === undefined || row.totalOther === null) ? "" : format2(row.totalOther);
         tr.appendChild(tdTotalOther);
 
         const tdChange = document.createElement("td");
@@ -593,7 +686,6 @@
       const filterSelect = document.getElementById("personFilter");
       const currentFilter = (selectedName !== undefined) ? selectedName : (filterSelect.value || "");
 
-      // build filter options
       const namesSet = new Set();
       data.forEach(txn => { if (txn.name) namesSet.add(txn.name); });
       filterSelect.innerHTML = '<option value="">All</option>';
@@ -605,7 +697,6 @@
         filterSelect.appendChild(opt);
       });
 
-      // sort by name then date
       data.sort((a,b)=> {
         const n1 = (a.name || "").localeCompare(b.name || "");
         if (n1 !== 0) return n1;
@@ -693,9 +784,7 @@
       const totalAllEl = document.getElementById("ledgerTotalAll");
       if (totalAllEl) totalAllEl.textContent = format2(sumOther);
 
-      // Selected person current balance (show name + balance + Baht)
       let selectedBalanceText = "-";
-
       if (currentFilter && lastBalanceByName[currentFilter] !== undefined) {
         const bal = lastBalanceByName[currentFilter];
         selectedBalanceText = `${currentFilter} : ${format2(bal)} ဘတ်`;
@@ -714,14 +803,11 @@
         return;
       }
       const data = await fetchAllBalances();
-      if (!data.length) {
-        alert("Daily balance data မရှိသေးပါ");
-        return;
-      }
+      if (!data.length) { alert("Daily balance data မရှိသေးပါ"); return; }
 
       data.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
-
       let prevTotal = null;
+
       const rows = [];
       const header = [
         "Date","YBBL","YK+","YSCB","YKTB","YTM",
@@ -739,6 +825,7 @@
         ];
         let sumTHB = 0;
         bankFields.forEach(id => { sumTHB += (row[id] || 0); });
+
         const totalFromMMK = row.total || 0;
         const originalTotal =
           (typeof row.totalBeforeOther === "number")
@@ -790,10 +877,7 @@
         return;
       }
       const data = await fetchAllPeopleTxns();
-      if (!data.length) {
-        alert("Ledger data မရှိသေးပါ");
-        return;
-      }
+      if (!data.length) { alert("Ledger data မရှိသေးပါ"); return; }
 
       data.sort((a,b)=> {
         const n1 = (a.name || "").localeCompare(b.name || "");
@@ -803,9 +887,7 @@
 
       const balancesByName = {};
       const rows = [];
-      const header = [
-        "Date","Name","Description","Cash In","Cash Out","Balance (Per Name)"
-      ];
+      const header = ["Date","Name","Description","Cash In","Cash Out","Balance (Per Name)"];
       rows.push(header);
 
       data.forEach(txn => {
@@ -817,14 +899,7 @@
         balancesByName[name] += cin - cout;
         const bal = balancesByName[name];
 
-        rows.push([
-          txn.date || "",
-          name,
-          txn.desc || "",
-          round2(cin),
-          round2(cout),
-          round2(bal)
-        ]);
+        rows.push([txn.date || "", name, txn.desc || "", round2(cin), round2(cout), round2(bal)]);
       });
 
       const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -842,6 +917,12 @@
       await saveBalanceDoc(data);
       await renderBalanceTable();
       alert("Saved to Firebase ✔");
+    });
+
+    document.getElementById("btnAddMMKLine").addEventListener("click", () => {
+      mmkItems.push({ amount: 0, note: "" });
+      renderMMKLines();
+      syncMMKTotal();
     });
 
     document.getElementById("btnClearForm").addEventListener("click", clearForm);
@@ -872,11 +953,9 @@
     const autoIds = [
       "YBBL","YKp","YSCB","YKTB","YTM",
       "HBBL","HKp","HSCB","HTM","TTM",
-      "cash","otherDebit","MMK","rate"
+      "cash","otherDebit","rate"
     ];
-    autoIds.forEach(id => {
-      document.getElementById(id).addEventListener("input", recalc);
-    });
+    autoIds.forEach(id => document.getElementById(id).addEventListener("input", recalc));
 
     document.getElementById("peopleForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -888,10 +967,7 @@
 
       if (!date) { alert("Ledger Date ထည့်ပါ"); return; }
       if (!name) { alert("Name ထည့်ပါ"); return; }
-      if (cashIn === 0 && cashOut === 0) {
-        alert("Cash In သို့မဟုတ် Cash Out တစ်ခုခု ထည့်ပါ");
-        return;
-      }
+      if (cashIn === 0 && cashOut === 0) { alert("Cash In သို့မဟုတ် Cash Out တစ်ခုခု ထည့်ပါ"); return; }
 
       const txn = { date, name, cashIn, cashOut, desc };
       await savePersonTxn(txn);
@@ -901,15 +977,15 @@
     });
 
     document.getElementById("btnClearPerson").addEventListener("click", clearPersonForm);
-
-    document.getElementById("personFilter").addEventListener("change", (e) => {
-      renderPeopleTableAndUpdateMinus(e.target.value);
-    });
+    document.getElementById("personFilter").addEventListener("change", (e) => renderPeopleTableAndUpdateMinus(e.target.value));
 
     // -------- Init --------
     (async () => {
       try {
         recalc();
+        renderMMKLines();
+        syncMMKTotal(false);
+
         await renderBalanceTable();
         await renderPeopleTableAndUpdateMinus("");
         console.log("Firebase connected & data loaded.");
