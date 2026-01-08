@@ -920,10 +920,10 @@
     });
 
     document.getElementById("btnAddMMKLine").addEventListener("click", () => {
-      mmkItems.push({ amount: 0, note: "" });
-      renderMMKLines();
-      syncMMKTotal();
-    });
+  mmkItems.push({ amount: "", note: "" }); // ✅ empty start
+  renderMMKLines();
+  syncMMKTotal();
+});
 
     document.getElementById("btnClearForm").addEventListener("click", clearForm);
 
