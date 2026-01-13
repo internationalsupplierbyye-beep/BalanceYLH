@@ -12,25 +12,24 @@
     header h1 { margin:0; font-size:20px; }
     header p { margin:4px 0 0 0; font-size:13px; opacity:0.9; }
     main { padding:16px; max-width:1300px; margin:0 auto 40px auto; }
+
     .card { background:#fff; border-radius:10px; padding:16px; margin-bottom:16px; box-shadow:0 1px 4px rgba(15,23,42,0.08); }
     .card h2 { margin:0 0 8px 0; font-size:18px; }
     .card small { display:block; font-size:12px; color:#4b5563; margin-bottom:12px; }
 
     form { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:8px 12px; align-items:flex-end; }
     label { display:flex; flex-direction:column; gap:4px; font-size:13px; }
-
     input[type="number"], input[type="date"], input[type="text"] {
       padding:6px 8px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
     }
     input[type="number"] { text-align:right; }
     input:focus { outline:2px solid #1b4ba0; outline-offset:1px; border-color:#1b4ba0; }
-
     select {
       padding:4px 6px; border-radius:6px; border:1px solid #d1d5db; font-size:13px;
       background:#fff;
     }
 
-    .btn-row { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
+    .btn-row { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; align-items:center; }
     button { border:none; border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer; }
     .btn-primary { background:#1b4ba0; color:#fff; }
     .btn-secondary { background:#e5e7eb; color:#111827; }
@@ -45,36 +44,46 @@
     tbody tr:nth-child(even){ background:#f9fafb; }
     tbody tr:hover { background:#e5f2ff; }
     .col-date { min-width:90px; }
-    .col-actions { min-width:120px; text-align:center; }
+    .col-actions { min-width:140px; text-align:center; }
     .info { font-size:11px; color:#6b7280; margin-top:8px; }
 
-    /* Ledger Summary */
     .ledger-summary-main { display:block; font-size:16px; font-weight:700; margin-bottom:6px; color:#000; }
     .ledger-summary-sub  { display:block; font-size:14px; margin-top:4px; color:#1b4ba0; }
 
-    /* ✅ MMK lines (full width list only) */
+    /* MMK lines */
     .mmk-lines-wrap { grid-column: 1 / -1; }
     .mmk-lines-list { margin-top:8px; display:flex; flex-direction:column; gap:6px; }
-
-    /* ✅ MMK row inputs compact like other inputs */
     .mmk-line{
       display:grid;
-      grid-template-columns: 120px 1fr 60px; /* Amount / Note / Remove */
+      grid-template-columns: 140px 1fr 60px; /* Amount / Note / Del */
       gap:6px;
       align-items:end;
     }
     .mmk-line input[type="number"],
     .mmk-line input[type="text"]{
       width:100%;
-      padding:6px 8px;      /* same as others */
-      font-size:13px;       /* same as others */
+      padding:6px 8px;
+      font-size:13px;
       border-radius:6px;
       border:1px solid #d1d5db;
     }
     .mmk-line button{
-      padding:6px 8px;      /* compact */
+      padding:6px 8px;
       font-size:11px;
       border-radius:6px;
+    }
+
+    /* Collapsible */
+    .collapsible-body { display:none; }
+    .collapsible-body.is-open { display:block; }
+    .toggle-link {
+      background:#e5e7eb; color:#111827;
+      border:none; border-radius:8px;
+      padding:6px 10px; cursor:pointer;
+      font-size:12px;
+    }
+    .toggle-link.primary {
+      background:#1b4ba0; color:#fff;
     }
   </style>
 
@@ -100,71 +109,33 @@
           <input type="date" id="date" required />
         </label>
 
-        <label>YBBL
-          <input type="number" id="YBBL" step="0.01" />
-        </label>
+        <label>YBBL <input type="number" id="YBBL" step="0.01" /></label>
+        <label>YK+  <input type="number" id="YKp"  step="0.01" /></label>
+        <label>YSCB <input type="number" id="YSCB" step="0.01" /></label>
+        <label>YKTB <input type="number" id="YKTB" step="0.01" /></label>
+        <label>YTM  <input type="number" id="YTM"  step="0.01" /></label>
 
-        <label>YK+
-          <input type="number" id="YKp" step="0.01" />
-        </label>
+        <label>HBBL <input type="number" id="HBBL" step="0.01" /></label>
+        <label>HK+  <input type="number" id="HKp"  step="0.01" /></label>
+        <label>HSCB <input type="number" id="HSCB" step="0.01" /></label>
+        <label>HTM  <input type="number" id="HTM"  step="0.01" /></label>
+        <label>TTM  <input type="number" id="TTM"  step="0.01" /></label>
 
-        <label>YSCB
-          <input type="number" id="YSCB" step="0.01" />
-        </label>
+        <label>Cash <input type="number" id="cash" step="0.01" /></label>
+        <label>Other Debit <input type="number" id="otherDebit" step="0.01" /></label>
 
-        <label>YKTB
-          <input type="number" id="YKTB" step="0.01" />
-        </label>
-
-        <label>YTM
-          <input type="number" id="YTM" step="0.01" />
-        </label>
-
-        <label>HBBL
-          <input type="number" id="HBBL" step="0.01" />
-        </label>
-
-        <label>HK+
-          <input type="number" id="HKp" step="0.01" />
-        </label>
-
-        <label>HSCB
-          <input type="number" id="HSCB" step="0.01" />
-        </label>
-
-        <label>HTM
-          <input type="number" id="HTM" step="0.01" />
-        </label>
-
-        <label>TTM
-          <input type="number" id="TTM" step="0.01" />
-        </label>
-
-        <label>Cash
-          <input type="number" id="cash" step="0.01" />
-        </label>
-
-        <label>Other Debit
-          <input type="number" id="otherDebit" step="0.01" />
-        </label>
-
-        <!-- ✅ MMK TOTAL (same size like others) -->
         <label>MMK Amount (Total)
           <input type="number" id="MMK" step="0.01" readonly />
         </label>
 
-        <!-- ✅ Add MMK button as normal column -->
         <div style="display:flex; align-items:flex-end;">
-          <button type="button" class="btn-secondary" id="btnAddMMKLine" style="height:32px; width:100%;">
-            + Add MMK
-          </button>
+          <button type="button" class="btn-secondary" id="btnAddMMKLine" style="height:32px; width:100%;">+ Add MMK</button>
         </div>
 
-        <!-- ✅ MMK Lines list (compact inputs) -->
         <div class="mmk-lines-wrap">
           <div id="mmkLines" class="mmk-lines-list"></div>
           <p class="info" style="margin:8px 0 0 0;">
-            * MMK ကို row အလိုက် ထည့်ပြီး (+) ပေါင်းစုထားတဲ့ Total MMK ကို MMK Amount အကွက်ထဲ Auto ပြမယ်။
+            * + Add MMK နှိပ်ပြီး Amount/Note row တွေထည့်ပါ။ Amount ပေါင်းစုထားတဲ့ Total MMK ကို MMK Amount (Total) ထဲ Auto ပြမယ်။
           </p>
         </div>
 
@@ -188,22 +159,20 @@
           <input type="number" id="totalOther" step="0.01" readonly />
         </label>
 
-        <div class="btn-row">
+        <div class="btn-row" style="grid-column:1/-1;">
           <button type="submit" class="btn-primary">Save / Update</button>
           <button type="button" class="btn-secondary" id="btnClearForm">Clear Form</button>
           <button type="button" class="btn-secondary" id="btnClearAll">Clear ALL Data</button>
           <button type="button" class="btn-secondary" id="btnExport">Export JSON</button>
           <button type="button" class="btn-secondary" id="btnExportExcel">Export Excel</button>
         </div>
-      </form>
 
-      <p class="info">
-        * မဖြည့်ထားတဲ့ အကွက်တွေကို 0 အနေနဲ့တွက်ပေးထားပါတယ်။<br>
-        * Total (MMK ➜ THB) = (MMK ÷ 100,000) × Rate (0.00 format)<br>
-        * Original Total (Before Other) = Bank + Cash + Other Debit + Total(MMK ➜ THB)<br>
-        * Ledger ထဲက Balance အကုန်ပေါင်းကို minusOther ထဲ Auto ထည့်ပြီး<br>
-        &nbsp;&nbsp;Total_Other = Original Total − Other People Money.
-      </p>
+        <p class="info" style="grid-column:1/-1;">
+          * Total (MMK ➜ THB) = (MMK ÷ 100,000) × Rate <br>
+          * Original Total = Bank + Cash + Other Debit + Total(MMK ➜ THB) <br>
+          * Total_Other = Original Total − Other People Money
+        </p>
+      </form>
     </section>
 
     <!-- DAILY BALANCE TABLE -->
@@ -236,51 +205,117 @@
     <section class="card">
       <h2>Other People Money Ledger</h2>
       <small>
-        လူတယောက်ချင်း Transaction (Date, Cash In, Cash Out, Description) အစုံလင် သိမ်းပြီး Name တယောက်စီ Running Balance ကို တွက်ပြမယ်။
-        အပေါ်မှာ Name Filter နဲ့လည်း စိတ်ကြိုက်ရွေးပြီးကြည့်လို့ရမယ်။
+        Transaction (Date, Cash In, Cash Out, Description) သိမ်းပြီး Name တယောက်စီ Running Balance ကိုတွက်ပြမယ်။
+        <br>✅ App ဝင်တာနဲ့ Local Rules (active) ကို Auto Run (catch-up) လုပ်ပေးမယ်။
       </small>
 
       <form id="peopleForm">
-        <label>Date
-          <input type="date" id="pDate" required />
-        </label>
-        <label>Name
-          <input type="text" id="pName" placeholder="Mi Htoo / Ohmar Win ..." required />
-        </label>
-        <label>Cash In
-          <input type="number" id="pIn" step="0.01" />
-        </label>
-        <label>Cash Out
-          <input type="number" id="pOut" step="0.01" />
-        </label>
-        <label>Description
-          <input type="text" id="pDesc" placeholder="Sep salary / Loan / Refund ..." />
+        <label>Date <input type="date" id="pDate" required /></label>
+        <label>Name <input type="text" id="pName" placeholder="A / Mi Htoo ..." required /></label>
+        <label>Cash In <input type="number" id="pIn" step="0.01" /></label>
+        <label>Cash Out <input type="number" id="pOut" step="0.01" /></label>
+        <label>Description <input type="text" id="pDesc" placeholder="Sep salary / Loan / Refund ..." /></label>
+
+        <label>Auto Cash Out Amount (THB)
+          <input type="number" id="pAutoOut" step="0.01" placeholder="ex: 100" />
         </label>
 
-        <div class="btn-row">
+        <div class="btn-row" style="grid-column:1/-1;">
           <button type="submit" class="btn-primary" id="btnSavePerson">Save Txn</button>
+          <button type="button" class="btn-secondary" id="btnAutoCashOut">Auto Cash Out</button>
           <button type="button" class="btn-secondary" id="btnClearPerson">Clear Form</button>
+          <button type="button" class="btn-secondary" id="btnExportLedgerJson">Export Ledger JSON</button>
           <button type="button" class="btn-secondary" id="btnExportLedgerExcel">Export Ledger Excel</button>
         </div>
+
+        <p class="info" style="grid-column:1/-1; margin-top:6px;">
+          * Auto Cash Out = Name ရဲ့ current balance ထဲကနေ “Auto Cash Out Amount” ထည့်ထားသလောက်ပဲ ထုတ်ပြီး Txn အဖြစ် Save လုပ်မယ်။
+        </p>
       </form>
 
-      <!-- Filter Row -->
+      <!-- AUTO CASH OUT RULE MANAGER (LocalStorage) -->
+      <div class="card" style="margin-top:14px; background:#f8fafc; border:1px solid #e5e7eb;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <h3 style="margin:0; font-size:16px;">Auto Cash Out Rule (Daily)</h3>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="toggle-link primary" id="btnToggleRulesPanel">Hide Panel</button>
+            <button type="button" class="toggle-link" id="btnToggleRulesTable">Hide Table</button>
+          </div>
+        </div>
+
+        <div id="rulesBody" class="collapsible-body is-open">
+          <small style="display:block; margin-bottom:10px;">
+            Name တစ်ယောက်ချင်း “တစ်နေ့ကို ဘယ်လောက်” + “Start/End Date” သတ်မှတ်ပြီး သိမ်းထားနိုင်ပါတယ်။
+            App ဝင်တာနဲ့ မလုပ်ရသေးတဲ့နေ့တွေကို catch-up အော်တို Cash Out txn အဖြစ် Save လုပ်ပေးမယ်။
+          </small>
+
+          <form id="ruleForm" style="margin-bottom:10px;">
+            <label>Name
+              <input type="text" id="rName" placeholder="A / Mi Htoo ..." required />
+            </label>
+
+            <label>Amount / Day (THB)
+              <input type="number" id="rAmount" step="0.01" placeholder="100" required />
+            </label>
+
+            <label>Start Date
+              <input type="date" id="rStart" required />
+            </label>
+
+            <label>End Date (optional)
+              <input type="date" id="rEnd" />
+            </label>
+
+            <div class="btn-row" style="grid-column:1/-1;">
+              <button type="submit" class="btn-primary" id="btnSaveRule">Save Rule</button>
+              <button type="button" class="btn-secondary" id="btnRunRulesNow">Run Rules Now</button>
+              <button type="button" class="btn-secondary" id="btnClearRuleForm">Clear</button>
+            </div>
+
+            <p class="info" id="ruleMsg" style="grid-column:1/-1; margin-top:6px;"></p>
+          </form>
+
+          <!-- Table only wrapper -->
+          <div id="rulesTableWrap" class="collapsible-body is-open">
+            <div class="table-container" style="max-height:220px;">
+              <table id="rulesTable" style="min-width:900px;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;">Name</th>
+                    <th>Amount/Day</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Active</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <p class="info" style="margin-top:8px;">
+              * Active=YES ဖြစ်တဲ့ Rule တွေကပဲ Auto run ပါမယ်။<br>
+              * Balance 0 ဖြစ်သွားရင် အလိုအလျောက် ထပ်မထုတ်တော့ပါ (stop)။
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter -->
       <div class="btn-row" style="margin-top:12px; margin-bottom:4px;">
         <label style="flex:0 0 220px; font-size:13px;">
           Filter by Name
-          <select id="personFilter">
-            <option value="">All</option>
-          </select>
+          <select id="personFilter"><option value="">All</option></select>
         </label>
       </div>
 
       <div class="table-container">
-        <table id="peopleTable">
+        <table id="peopleTable" style="min-width:900px;">
           <thead>
             <tr>
               <th>Date</th>
-              <th>Name</th>
-              <th>Description</th>
+              <th style="text-align:left;">Name</th>
+              <th style="text-align:left;">Description</th>
               <th>Cash In</th>
               <th>Cash Out</th>
               <th>Balance (Per Name)</th>
@@ -291,7 +326,6 @@
         </table>
       </div>
 
-      <!-- Summary lines -->
       <p class="info">
         <span class="ledger-summary-main">
           👤 Selected Person Balance:
@@ -301,11 +335,6 @@
           💰 Total Other People Money (All):
           <span id="ledgerTotalAll">0.00</span>
         </span>
-      </p>
-
-      <p class="info">
-        * Name တယောက်ချင်း Filter ထောက်ပြီး သက်ဆိုင်တဲ့ Transaction တွေကိုသာ ကြည့်လို့ရမယ်။<br>
-        * Minus Other Money ကတော့ Name တယောက်စီနောက်ဆုံး Balance အားလုံး ပေါင်းထားတာကို သုံးပေးတယ်။
       </p>
     </section>
   </main>
@@ -335,7 +364,60 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // -------- Helper --------
+    // =========================================================
+    // ✅ LOCAL AUTO RULES (LocalStorage) - Firestore မသုံး
+    // =========================================================
+    const RULES_KEY = "AUTO_CASHOUT_RULES_V1";
+    const RULES_PANEL_KEY = "RULES_PANEL_COLLAPSED_V1"; // 1=collapsed
+    const RULES_TABLE_KEY = "RULES_TABLE_COLLAPSED_V1"; // 1=collapsed
+
+    let localRules = []; // [{id,name,amountPerDay,startDate,endDate,active}]
+    let editingRuleId = null;
+
+    function makeId() {
+      return "R_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,7);
+    }
+    function loadRules() {
+      try {
+        const raw = localStorage.getItem(RULES_KEY);
+        localRules = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(localRules)) localRules = [];
+      } catch {
+        localRules = [];
+      }
+    }
+    function saveRules() {
+      localStorage.setItem(RULES_KEY, JSON.stringify(localRules));
+    }
+    function setRuleMsg(text) {
+      const el = document.getElementById("ruleMsg");
+      if (el) el.textContent = text || "";
+    }
+
+    function setCollapsed(elId, btnId, collapsed, showText="Show", hideText="Hide") {
+      const el = document.getElementById(elId);
+      const btn = document.getElementById(btnId);
+      if (!el || !btn) return;
+      if (collapsed) {
+        el.classList.remove("is-open");
+        btn.textContent = showText;
+      } else {
+        el.classList.add("is-open");
+        btn.textContent = hideText;
+      }
+    }
+
+    function setPanelCollapsed(collapsed) {
+      setCollapsed("rulesBody","btnToggleRulesPanel",collapsed,"Show Panel","Hide Panel");
+      localStorage.setItem(RULES_PANEL_KEY, collapsed ? "1" : "0");
+    }
+    function setTableCollapsed(collapsed) {
+      setCollapsed("rulesTableWrap","btnToggleRulesTable",collapsed,"Show Table","Hide Table");
+      localStorage.setItem(RULES_TABLE_KEY, collapsed ? "1" : "0");
+    }
+    // =========================================================
+
+    // -------- Helpers --------
     function numFrom(id) {
       const v = parseFloat(document.getElementById(id).value);
       return isNaN(v) ? 0 : v;
@@ -348,13 +430,33 @@
       if (value === null || value === undefined || isNaN(value)) return 0;
       return Number(Number(value).toFixed(2));
     }
+    function isoToday() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    function addDays(iso, days) {
+      const d = new Date(iso + "T00:00:00");
+      d.setDate(d.getDate() + days);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
 
-    // ✅ MMK Multi-line state
-    let mmkItems = []; // [{ amount:number, note:string }]
+    // -------- MMK rows (+) --------
+    let mmkItems = []; // [{amount:""|number, note:string}]
+
+    function syncMMKTotal(recalcAfter = true) {
+      const total = mmkItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
+      document.getElementById("MMK").value = format2(round2(total));
+      if (recalcAfter) recalc();
+    }
 
     function renderMMKLines() {
       const wrap = document.getElementById("mmkLines");
-      if (!wrap) return;
       wrap.innerHTML = "";
 
       if (mmkItems.length === 0) {
@@ -374,10 +476,10 @@
         inpAmt.type = "number";
         inpAmt.step = "0.01";
         inpAmt.placeholder = "MMK";
-        inpAmt.value = (it.amount ?? "");
+        inpAmt.value = (it.amount ?? ""); // empty start
         inpAmt.oninput = () => {
-          const v = parseFloat(inpAmt.value);
-          mmkItems[idx].amount = isNaN(v) ? 0 : v;
+          const raw = inpAmt.value;
+          mmkItems[idx].amount = raw === "" ? "" : (parseFloat(raw) || 0);
           syncMMKTotal();
         };
 
@@ -404,12 +506,6 @@
       });
 
       syncMMKTotal(false);
-    }
-
-    function syncMMKTotal(recalcAfter = true) {
-      const total = mmkItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
-      document.getElementById("MMK").value = format2(round2(total));
-      if (recalcAfter) recalc();
     }
 
     // -------- Main balance calc --------
@@ -461,7 +557,7 @@
         minusOther: round2(numFrom("minusOther")),
         totalOther: round2(numFrom("totalOther")),
         mmkItems: mmkItems.map(x => ({
-          amount: round2(parseFloat(x.amount) || 0),
+          amount: x.amount === "" ? "" : round2(parseFloat(x.amount) || 0),
           note: (x.note || "").trim()
         }))
       };
@@ -476,14 +572,11 @@
         const el = document.getElementById(id);
         if (!el) return;
         if (id === "date") el.value = row.date || "";
-        else {
-          const v = row[id];
-          el.value = (v === undefined || v === null || v === "") ? "" : format2(v);
-        }
+        else el.value = (row[id] === undefined || row[id] === null || row[id] === "") ? "" : format2(row[id]);
       });
 
       mmkItems = Array.isArray(row.mmkItems)
-        ? row.mmkItems.map(x => ({ amount: parseFloat(x.amount) || 0, note: x.note || "" }))
+        ? row.mmkItems.map(x => ({ amount: (x.amount ?? ""), note: x.note || "" }))
         : [];
 
       const oldMMK = parseFloat(row.MMK);
@@ -516,15 +609,12 @@
         return [];
       }
     }
-
     async function saveBalanceDoc(data) {
       await addDoc(collection(db, "daily_balance"), data);
     }
-
     async function deleteBalance(id) {
       await deleteDoc(doc(db, "daily_balance", id));
     }
-
     async function clearAllBalanceDocs() {
       const snap = await getDocs(collection(db, "daily_balance"));
       const tasks = [];
@@ -639,6 +729,7 @@
 
     // -------- Firestore: other_people_txn (ledger) --------
     let editingTxnId = null;
+    let lastBalanceByNameCache = {};
 
     async function fetchAllPeopleTxns() {
       try {
@@ -739,11 +830,11 @@
         tr.appendChild(tdDesc);
 
         const tdIn = document.createElement("td");
-        tdIn.textContent = cin || "";
+        tdIn.textContent = (txn.cashIn ?? 0) === 0 ? "" : txn.cashIn;
         tr.appendChild(tdIn);
 
         const tdOut = document.createElement("td");
-        tdOut.textContent = cout || "";
+        tdOut.textContent = (txn.cashOut ?? 0) === 0 ? "" : txn.cashOut;
         tr.appendChild(tdOut);
 
         const tdBal = document.createElement("td");
@@ -776,13 +867,14 @@
         tbody.appendChild(tr);
       });
 
+      lastBalanceByNameCache = lastBalanceByName;
+
       let sumOther = 0;
       Object.values(lastBalanceByName).forEach(v => { sumOther += v; });
       document.getElementById("minusOther").value = format2(sumOther);
       recalc();
 
-      const totalAllEl = document.getElementById("ledgerTotalAll");
-      if (totalAllEl) totalAllEl.textContent = format2(sumOther);
+      document.getElementById("ledgerTotalAll").textContent = format2(sumOther);
 
       let selectedBalanceText = "-";
       if (currentFilter && lastBalanceByName[currentFilter] !== undefined) {
@@ -791,9 +883,21 @@
       } else if (!currentFilter) {
         selectedBalanceText = "All persons";
       }
+      document.getElementById("ledgerSelectedBalance").textContent = selectedBalanceText;
+    }
 
-      const selBalEl = document.getElementById("ledgerSelectedBalance");
-      if (selBalEl) selBalEl.textContent = selectedBalanceText;
+    // -------- Ledger export JSON --------
+    async function exportLedgerJson() {
+      const data = await fetchAllPeopleTxns();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = "other_people_ledger.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     // -------- Excel Export --------
@@ -899,7 +1003,7 @@
         balancesByName[name] += cin - cout;
         const bal = balancesByName[name];
 
-        rows.push([txn.date || "", name, txn.desc || "", round2(cin), round2(cout), round2(bal)]);
+        rows.push([ txn.date || "", name, txn.desc || "", round2(cin), round2(cout), round2(bal) ]);
       });
 
       const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -908,7 +1012,259 @@
       XLSX.writeFile(wb, "other_people_ledger.xlsx");
     }
 
+    // -------- Manual Auto Cash Out (partial) --------
+    async function autoCashOutAndSave() {
+      const inputName = document.getElementById("pName").value.trim();
+      const filterName = document.getElementById("personFilter").value || "";
+      const name = inputName || filterName;
+
+      if (!name) { alert("Name ထည့်ပါ (သို့) Filter မှာ Name ရွေးပါ"); return; }
+
+      const bal = lastBalanceByNameCache[name];
+      if (bal === undefined) { alert(`"${name}" အတွက် Ledger data မတွေ့ပါ`); return; }
+      if (!(bal > 0)) { alert(`"${name}" ရဲ့ Balance က ${format2(bal)} ဖြစ်လို့ Cash Out မလုပ်ပါ`); return; }
+
+      let date = document.getElementById("pDate").value;
+      if (!date) {
+        date = isoToday();
+        document.getElementById("pDate").value = date;
+      }
+
+      const req = parseFloat(document.getElementById("pAutoOut").value);
+      if (isNaN(req) || req <= 0) { alert("Auto Cash Out Amount ထည့်ပါ (ဥပမာ 100)"); return; }
+
+      const pay = Math.min(req, bal);
+
+      const txn = {
+        date, name,
+        cashIn: 0,
+        cashOut: round2(pay),
+        desc: `Auto Cash Out (${format2(pay)} of ${format2(bal)})`
+      };
+
+      editingTxnId = null;
+      await savePersonTxn(txn);
+      await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
+      alert(`Auto Cash Out Saved ✔  ${name} - ${format2(pay)} บาท`);
+    }
+
+    // -------- Rules UI --------
+    function fillRuleForm(r) {
+      document.getElementById("rName").value = r.name || "";
+      document.getElementById("rAmount").value = r.amountPerDay ?? "";
+      document.getElementById("rStart").value = r.startDate || "";
+      document.getElementById("rEnd").value = r.endDate || "";
+      editingRuleId = r.id;
+      document.getElementById("btnSaveRule").textContent = "Update Rule";
+      setRuleMsg("");
+    }
+
+    function clearRuleForm() {
+      document.getElementById("ruleForm").reset();
+      editingRuleId = null;
+      document.getElementById("btnSaveRule").textContent = "Save Rule";
+      setRuleMsg("");
+    }
+
+    function renderRulesTable() {
+      const tbody = document.querySelector("#rulesTable tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      localRules
+        .slice()
+        .sort((a,b)=> (a.name||"").localeCompare(b.name||""))
+        .forEach(r => {
+          const tr = document.createElement("tr");
+
+          const tdName = document.createElement("td");
+          tdName.textContent = r.name || "";
+          tdName.style.textAlign = "left";
+          tr.appendChild(tdName);
+
+          const tdAmt = document.createElement("td");
+          tdAmt.textContent = format2(r.amountPerDay || 0);
+          tr.appendChild(tdAmt);
+
+          const tdStart = document.createElement("td");
+          tdStart.textContent = r.startDate || "";
+          tdStart.style.textAlign = "center";
+          tr.appendChild(tdStart);
+
+          const tdEnd = document.createElement("td");
+          tdEnd.textContent = r.endDate || "";
+          tdEnd.style.textAlign = "center";
+          tr.appendChild(tdEnd);
+
+          const tdActive = document.createElement("td");
+          tdActive.textContent = r.active ? "YES" : "NO";
+          tdActive.style.textAlign = "center";
+          tr.appendChild(tdActive);
+
+          const tdAct = document.createElement("td");
+          tdAct.className = "col-actions";
+
+          const btnLoad = document.createElement("button");
+          btnLoad.type = "button";
+          btnLoad.className = "btn-small btn-secondary";
+          btnLoad.textContent = "Load";
+          btnLoad.onclick = () => fillRuleForm(r);
+
+          const btnToggle = document.createElement("button");
+          btnToggle.type = "button";
+          btnToggle.className = "btn-small btn-secondary";
+          btnToggle.style.marginLeft = "4px";
+          btnToggle.textContent = r.active ? "Stop" : "Start";
+          btnToggle.onclick = () => {
+            r.active = !r.active;
+            saveRules();
+            renderRulesTable();
+          };
+
+          const btnDel = document.createElement("button");
+          btnDel.type = "button";
+          btnDel.className = "btn-small btn-danger";
+          btnDel.style.marginLeft = "4px";
+          btnDel.textContent = "Delete";
+          btnDel.onclick = () => {
+            if (!confirm(`Delete rule for ${r.name}?`)) return;
+            localRules = localRules.filter(x => x.id !== r.id);
+            saveRules();
+            renderRulesTable();
+            if (editingRuleId === r.id) clearRuleForm();
+          };
+
+          tdAct.appendChild(btnLoad);
+          tdAct.appendChild(btnToggle);
+          tdAct.appendChild(btnDel);
+          tr.appendChild(tdAct);
+
+          tbody.appendChild(tr);
+        });
+    }
+
+    // -------- Auto Run --------
+    async function runLocalAutoRulesOnAppOpen(showMsg = false) {
+      const activeRules = localRules.filter(r => r.active);
+      if (!activeRules.length) {
+        if (showMsg) setRuleMsg("No active rules to run.");
+        return;
+      }
+
+      const today = isoToday();
+      const txns = await fetchAllPeopleTxns();
+
+      const netByNameByDate = {};
+      const earliestByName = {};
+      const autoKeySet = new Set(); // `${ruleId}_${date}`
+
+      for (const t of txns) {
+        const name = (t.name || "").trim();
+        const date = t.date || "";
+        if (!name || !date) continue;
+
+        const cin = Number(t.cashIn || 0) || 0;
+        const cout = Number(t.cashOut || 0) || 0;
+
+        if (!netByNameByDate[name]) netByNameByDate[name] = {};
+        netByNameByDate[name][date] = (netByNameByDate[name][date] || 0) + (cin - cout);
+
+        if (!earliestByName[name] || date < earliestByName[name]) earliestByName[name] = date;
+
+        if (t.isAuto && t.autoRuleId && t.autoDate) {
+          autoKeySet.add(`${t.autoRuleId}_${t.autoDate}`);
+        }
+      }
+
+      let created = 0;
+      let stopped = 0;
+
+      for (const r of activeRules) {
+        const name = (r.name || "").trim();
+        const perDay = Number(r.amountPerDay || 0);
+        const start = r.startDate || today;
+        const end = (r.endDate || "").trim();
+
+        if (!name || !isFinite(perDay) || perDay <= 0) continue;
+
+        const to = end ? (end < today ? end : today) : today;
+
+        const simStart = earliestByName[name]
+          ? (earliestByName[name] < start ? earliestByName[name] : start)
+          : start;
+
+        let bal = 0;
+        let d = simStart;
+
+        while (d <= to) {
+          const dayNet = (netByNameByDate[name] && netByNameByDate[name][d]) ? netByNameByDate[name][d] : 0;
+          bal += dayNet;
+
+          if (d >= start && d <= to) {
+            if (bal <= 0) {
+              r.active = false;
+              stopped++;
+              break;
+            }
+
+            const key = `${r.id}_${d}`;
+            if (!autoKeySet.has(key)) {
+              const pay = Math.min(perDay, bal);
+
+              const txn = {
+                date: d,
+                name,
+                cashIn: 0,
+                cashOut: round2(pay),
+                desc: `Auto Cash Out ${format2(pay)} (Rule)`,
+                isAuto: true,
+                autoDate: d,
+                autoRuleId: r.id
+              };
+
+              await addDoc(collection(db, "other_people_txn"), txn);
+              created++;
+
+              bal -= pay;
+              autoKeySet.add(key);
+              if (!netByNameByDate[name]) netByNameByDate[name] = {};
+              netByNameByDate[name][d] = (netByNameByDate[name][d] || 0) - pay;
+            }
+          }
+
+          d = addDays(d, 1);
+        }
+
+        if (end && to === end) {
+          r.active = false;
+          stopped++;
+        }
+      }
+
+      saveRules();
+      renderRulesTable();
+
+      if (created > 0) {
+        await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
+      }
+
+      if (showMsg) setRuleMsg(`Done ✓ Created: ${created} txn | Stopped: ${stopped} rule(s)`);
+    }
+
     // -------- Events --------
+    document.getElementById("btnAddMMKLine").addEventListener("click", () => {
+      mmkItems.push({ amount: "", note: "" }); // start empty
+      renderMMKLines();
+      syncMMKTotal();
+    });
+
+    const autoIds = [
+      "YBBL","YKp","YSCB","YKTB","YTM",
+      "HBBL","HKp","HSCB","HTM","TTM",
+      "cash","otherDebit","rate"
+    ];
+    autoIds.forEach(id => document.getElementById(id).addEventListener("input", recalc));
+
     document.getElementById("balanceForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       recalc();
@@ -918,12 +1274,6 @@
       await renderBalanceTable();
       alert("Saved to Firebase ✔");
     });
-
-    document.getElementById("btnAddMMKLine").addEventListener("click", () => {
-  mmkItems.push({ amount: "", note: "" }); // ✅ empty start
-  renderMMKLines();
-  syncMMKTotal();
-});
 
     document.getElementById("btnClearForm").addEventListener("click", clearForm);
 
@@ -948,14 +1298,6 @@
     });
 
     document.getElementById("btnExportExcel").addEventListener("click", exportBalancesExcel);
-    document.getElementById("btnExportLedgerExcel").addEventListener("click", exportLedgerExcel);
-
-    const autoIds = [
-      "YBBL","YKp","YSCB","YKTB","YTM",
-      "HBBL","HKp","HSCB","HTM","TTM",
-      "cash","otherDebit","rate"
-    ];
-    autoIds.forEach(id => document.getElementById(id).addEventListener("input", recalc));
 
     document.getElementById("peopleForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -977,7 +1319,70 @@
     });
 
     document.getElementById("btnClearPerson").addEventListener("click", clearPersonForm);
-    document.getElementById("personFilter").addEventListener("change", (e) => renderPeopleTableAndUpdateMinus(e.target.value));
+    document.getElementById("btnAutoCashOut").addEventListener("click", autoCashOutAndSave);
+    document.getElementById("btnExportLedgerJson").addEventListener("click", exportLedgerJson);
+    document.getElementById("btnExportLedgerExcel").addEventListener("click", exportLedgerExcel);
+
+    document.getElementById("personFilter").addEventListener("change", (e) => {
+      renderPeopleTableAndUpdateMinus(e.target.value);
+    });
+
+    // Rule form events
+    document.getElementById("ruleForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("rName").value.trim();
+      const amt  = parseFloat(document.getElementById("rAmount").value);
+      const start = document.getElementById("rStart").value;
+      const end   = document.getElementById("rEnd").value;
+
+      if (!name) { alert("Rule Name ထည့်ပါ"); return; }
+      if (isNaN(amt) || amt <= 0) { alert("Amount/Day ကို 0 ထက်ကြီးအောင် ထည့်ပါ"); return; }
+      if (!start) { alert("Start Date ထည့်ပါ"); return; }
+      if (end && end < start) { alert("End Date က Start Date ထက်နောက်ဖြစ်ရမယ်"); return; }
+
+      if (editingRuleId) {
+        const r = localRules.find(x => x.id === editingRuleId);
+        if (r) {
+          r.name = name;
+          r.amountPerDay = round2(amt);
+          r.startDate = start;
+          r.endDate = end || "";
+          r.active = true;
+        }
+      } else {
+        localRules.push({
+          id: makeId(),
+          name,
+          amountPerDay: round2(amt),
+          startDate: start,
+          endDate: end || "",
+          active: true
+        });
+      }
+
+      saveRules();
+      renderRulesTable();
+      clearRuleForm();
+      setRuleMsg("Saved ✓ (Rule list updated)");
+    });
+
+    document.getElementById("btnRunRulesNow").addEventListener("click", async () => {
+      await runLocalAutoRulesOnAppOpen(true);
+    });
+
+    document.getElementById("btnClearRuleForm").addEventListener("click", clearRuleForm);
+
+    // Panel / table toggles
+    document.getElementById("btnToggleRulesPanel").addEventListener("click", () => {
+      const body = document.getElementById("rulesBody");
+      const open = body.classList.contains("is-open");
+      setPanelCollapsed(open); // open -> collapse
+    });
+    document.getElementById("btnToggleRulesTable").addEventListener("click", () => {
+      const body = document.getElementById("rulesTableWrap");
+      const open = body.classList.contains("is-open");
+      setTableCollapsed(open);
+    });
 
     // -------- Init --------
     (async () => {
@@ -986,8 +1391,25 @@
         renderMMKLines();
         syncMMKTotal(false);
 
+        document.getElementById("date").value = isoToday();
+        document.getElementById("pDate").value = isoToday();
+        document.getElementById("rStart").value = isoToday();
+
         await renderBalanceTable();
         await renderPeopleTableAndUpdateMinus("");
+
+        loadRules();
+        renderRulesTable();
+
+        // restore panel/table collapse state
+        const panelCollapsed = localStorage.getItem(RULES_PANEL_KEY) === "1";
+        const tableCollapsed = localStorage.getItem(RULES_TABLE_KEY) === "1";
+        setPanelCollapsed(panelCollapsed);
+        setTableCollapsed(tableCollapsed);
+
+        // ✅ App ဝင်တာနဲ့ Auto Run (active rules)
+        await runLocalAutoRulesOnAppOpen(false);
+
         console.log("Firebase connected & data loaded.");
       } catch (err) {
         console.error("Init error:", err);
