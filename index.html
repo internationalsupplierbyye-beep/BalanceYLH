@@ -44,7 +44,7 @@
     tbody tr:nth-child(even){ background:#f9fafb; }
     tbody tr:hover { background:#e5f2ff; }
     .col-date { min-width:90px; }
-    .col-actions { min-width:140px; text-align:center; }
+    .col-actions { min-width:160px; text-align:center; }
     .info { font-size:11px; color:#6b7280; margin-top:8px; }
 
     .ledger-summary-main { display:block; font-size:16px; font-weight:700; margin-bottom:6px; color:#000; }
@@ -55,7 +55,7 @@
     .mmk-lines-list { margin-top:8px; display:flex; flex-direction:column; gap:6px; }
     .mmk-line{
       display:grid;
-      grid-template-columns: 140px 1fr 60px; /* Amount / Note / Del */
+      grid-template-columns: 140px 1fr 60px;
       gap:6px;
       align-items:end;
     }
@@ -82,9 +82,7 @@
       padding:6px 10px; cursor:pointer;
       font-size:12px;
     }
-    .toggle-link.primary {
-      background:#1b4ba0; color:#fff;
-    }
+    .toggle-link.primary { background:#1b4ba0; color:#fff; }
   </style>
 
   <!-- Excel Export Library -->
@@ -100,14 +98,10 @@
     <!-- MAIN BALANCE FORM -->
     <section class="card">
       <h2>Daily Balance (Main)</h2>
-      <small>
-        Bank / Cash / Other Debit + မြန်မာငွေ (MMK) နဲ့ Exchange Rate ထည့်ပါ။ Total / Original Total / Total_Other ကို အော်တိုတွက်ပေးမယ်။
-      </small>
+      <small>Bank / Cash / Other Debit + MMK + Rate ထည့်ပါ။ Total / Total_Other ကို အော်တိုတွက်ပေးမယ်။</small>
 
       <form id="balanceForm">
-        <label>Date
-          <input type="date" id="date" required />
-        </label>
+        <label>Date <input type="date" id="date" required /></label>
 
         <label>YBBL <input type="number" id="YBBL" step="0.01" /></label>
         <label>YK+  <input type="number" id="YKp"  step="0.01" /></label>
@@ -135,7 +129,7 @@
         <div class="mmk-lines-wrap">
           <div id="mmkLines" class="mmk-lines-list"></div>
           <p class="info" style="margin:8px 0 0 0;">
-            * + Add MMK နှိပ်ပြီး Amount/Note row တွေထည့်ပါ။ Amount ပေါင်းစုထားတဲ့ Total MMK ကို MMK Amount (Total) ထဲ Auto ပြမယ်။
+            * + Add MMK နှိပ်ပြီး Amount/Note row တွေထည့်ပါ။ Total MMK ကို အော်တိုပေါင်းပေးမယ်။
           </p>
         </div>
 
@@ -143,21 +137,10 @@
           <input type="number" id="rate" step="0.01" />
         </label>
 
-        <label>Total (MMK ➜ THB)
-          <input type="number" id="total" step="0.01" readonly />
-        </label>
-
-        <label>Total Before Other (THB)
-          <input type="number" id="totalBeforeOther" step="0.01" readonly />
-        </label>
-
-        <label>Other People Money (-)
-          <input type="number" id="minusOther" step="0.01" readonly />
-        </label>
-
-        <label>Total_Other (Final)
-          <input type="number" id="totalOther" step="0.01" readonly />
-        </label>
+        <label>Total (MMK ➜ THB) <input type="number" id="total" step="0.01" readonly /></label>
+        <label>Total Before Other (THB) <input type="number" id="totalBeforeOther" step="0.01" readonly /></label>
+        <label>Other People Money (-) <input type="number" id="minusOther" step="0.01" readonly /></label>
+        <label>Total_Other (Final) <input type="number" id="totalOther" step="0.01" readonly /></label>
 
         <div class="btn-row" style="grid-column:1/-1;">
           <button type="submit" class="btn-primary">Save / Update</button>
@@ -168,17 +151,20 @@
         </div>
 
         <p class="info" style="grid-column:1/-1;">
-          * Total (MMK ➜ THB) = (MMK ÷ 100,000) × Rate <br>
-          * Original Total = Bank + Cash + Other Debit + Total(MMK ➜ THB) <br>
-          * Total_Other = Original Total − Other People Money
+          * Total(MMK➜THB)=(MMK÷100,000)×Rate | Total_Other=Original Total−Other People Money
         </p>
       </form>
     </section>
 
     <!-- DAILY BALANCE TABLE -->
     <section class="card">
-      <h2>Daily Balance List (From Firebase)</h2>
-      <div class="table-container">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <h2 style="margin:0;">Daily Balance List (From Firebase)</h2>
+        <button type="button" class="toggle-link primary" id="btnToggleBalanceList">Show Table</button>
+      </div>
+
+      <div id="balanceListBody" class="collapsible-body is-open">
+        <div class="table-container">
         <table id="dataTable">
           <thead>
             <tr>
@@ -199,6 +185,7 @@
         </table>
       </div>
       <p class="info" id="profitSummary"></p>
+      </div>
     </section>
 
     <!-- OTHER PEOPLE MONEY LEDGER -->
@@ -206,7 +193,7 @@
       <h2>Other People Money Ledger</h2>
       <small>
         Transaction (Date, Cash In, Cash Out, Description) သိမ်းပြီး Name တယောက်စီ Running Balance ကိုတွက်ပြမယ်။
-        <br>✅ App ဝင်တာနဲ့ Local Rules (active) ကို Auto Run (catch-up) လုပ်ပေးမယ်။
+        <br>✅ App ဝင်တာနဲ့ Firestore Rules (active) ကို Auto Run (catch-up) လုပ်ပေးမယ်။
       </small>
 
       <form id="peopleForm">
@@ -227,16 +214,12 @@
           <button type="button" class="btn-secondary" id="btnExportLedgerJson">Export Ledger JSON</button>
           <button type="button" class="btn-secondary" id="btnExportLedgerExcel">Export Ledger Excel</button>
         </div>
-
-        <p class="info" style="grid-column:1/-1; margin-top:6px;">
-          * Auto Cash Out = Name ရဲ့ current balance ထဲကနေ “Auto Cash Out Amount” ထည့်ထားသလောက်ပဲ ထုတ်ပြီး Txn အဖြစ် Save လုပ်မယ်။
-        </p>
       </form>
 
-      <!-- AUTO CASH OUT RULE MANAGER (LocalStorage) -->
+      <!-- AUTO CASH OUT RULE MANAGER (Firestore) -->
       <div class="card" style="margin-top:14px; background:#f8fafc; border:1px solid #e5e7eb;">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-          <h3 style="margin:0; font-size:16px;">Auto Cash Out Rule (Daily)</h3>
+          <h3 style="margin:0; font-size:16px;">Auto Cash Out Rule (Daily) — Firestore</h3>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button type="button" class="toggle-link primary" id="btnToggleRulesPanel">Hide Panel</button>
             <button type="button" class="toggle-link" id="btnToggleRulesTable">Hide Table</button>
@@ -245,26 +228,14 @@
 
         <div id="rulesBody" class="collapsible-body is-open">
           <small style="display:block; margin-bottom:10px;">
-            Name တစ်ယောက်ချင်း “တစ်နေ့ကို ဘယ်လောက်” + “Start/End Date” သတ်မှတ်ပြီး သိမ်းထားနိုင်ပါတယ်။
-            App ဝင်တာနဲ့ မလုပ်ရသေးတဲ့နေ့တွေကို catch-up အော်တို Cash Out txn အဖြစ် Save လုပ်ပေးမယ်။
+            Rule တွေကို Firestore ထဲသိမ်းထားလို့ Device အားလုံးမှာ တူတူပေါ်မယ်။
           </small>
 
           <form id="ruleForm" style="margin-bottom:10px;">
-            <label>Name
-              <input type="text" id="rName" placeholder="A / Mi Htoo ..." required />
-            </label>
-
-            <label>Amount / Day (THB)
-              <input type="number" id="rAmount" step="0.01" placeholder="100" required />
-            </label>
-
-            <label>Start Date
-              <input type="date" id="rStart" required />
-            </label>
-
-            <label>End Date (optional)
-              <input type="date" id="rEnd" />
-            </label>
+            <label>Name <input type="text" id="rName" placeholder="A / Mi Htoo ..." required /></label>
+            <label>Amount / Day (THB) <input type="number" id="rAmount" step="0.01" placeholder="100" required /></label>
+            <label>Start Date <input type="date" id="rStart" required /></label>
+            <label>End Date (optional) <input type="date" id="rEnd" /></label>
 
             <div class="btn-row" style="grid-column:1/-1;">
               <button type="submit" class="btn-primary" id="btnSaveRule">Save Rule</button>
@@ -275,7 +246,6 @@
             <p class="info" id="ruleMsg" style="grid-column:1/-1; margin-top:6px;"></p>
           </form>
 
-          <!-- Table only wrapper -->
           <div id="rulesTableWrap" class="collapsible-body is-open">
             <div class="table-container" style="max-height:220px;">
               <table id="rulesTable" style="min-width:900px;">
@@ -286,6 +256,7 @@
                     <th>Start</th>
                     <th>End</th>
                     <th>Active</th>
+                    <th>Last Run</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -294,8 +265,7 @@
             </div>
 
             <p class="info" style="margin-top:8px;">
-              * Active=YES ဖြစ်တဲ့ Rule တွေကပဲ Auto run ပါမယ်။<br>
-              * Balance 0 ဖြစ်သွားရင် အလိုအလျောက် ထပ်မထုတ်တော့ပါ (stop)။
+              * Active=YES ဖြစ်တဲ့ Rule တွေကပဲ Auto run ပါမယ်။ Balance 0 ဖြစ်ရင် auto stop ဖြစ်မယ်။
             </p>
           </div>
         </div>
@@ -328,12 +298,10 @@
 
       <p class="info">
         <span class="ledger-summary-main">
-          👤 Selected Person Balance:
-          <span id="ledgerSelectedBalance">All persons</span>
+          👤 Selected Person Balance: <span id="ledgerSelectedBalance">All persons</span>
         </span>
         <span class="ledger-summary-sub">
-          💰 Total Other People Money (All):
-          <span id="ledgerTotalAll">0.00</span>
+          💰 Total Other People Money (All): <span id="ledgerTotalAll">0.00</span>
         </span>
       </p>
     </section>
@@ -348,7 +316,9 @@
       addDoc,
       setDoc,
       doc,
-      deleteDoc
+      deleteDoc,
+      updateDoc,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -365,55 +335,51 @@
     const db  = getFirestore(app);
 
     // =========================================================
-    // ✅ LOCAL AUTO RULES (LocalStorage) - Firestore မသုံး
+    // ✅ RULES: Firestore collection
     // =========================================================
-    const RULES_KEY = "AUTO_CASHOUT_RULES_V1";
-    const RULES_PANEL_KEY = "RULES_PANEL_COLLAPSED_V1"; // 1=collapsed
-    const RULES_TABLE_KEY = "RULES_TABLE_COLLAPSED_V1"; // 1=collapsed
-
-    let localRules = []; // [{id,name,amountPerDay,startDate,endDate,active}]
+    const RULES_COLL = "auto_cashout_rules";   // <--- rules stored here
+    const RULES_PANEL_KEY = "RULES_PANEL_COLLAPSED_V1";
+    const RULES_TABLE_KEY = "RULES_TABLE_COLLAPSED_V1";
+    const BAL_LIST_KEY  = "BAL_LIST_COLLAPSED_V1";
+    let fsRules = []; // [{id, ...data}]
     let editingRuleId = null;
 
-    function makeId() {
-      return "R_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,7);
-    }
-    function loadRules() {
-      try {
-        const raw = localStorage.getItem(RULES_KEY);
-        localRules = raw ? JSON.parse(raw) : [];
-        if (!Array.isArray(localRules)) localRules = [];
-      } catch {
-        localRules = [];
-      }
-    }
-    function saveRules() {
-      localStorage.setItem(RULES_KEY, JSON.stringify(localRules));
-    }
-    function setRuleMsg(text) {
-      const el = document.getElementById("ruleMsg");
-      if (el) el.textContent = text || "";
+    async function fetchAllRules() {
+      const snap = await getDocs(collection(db, RULES_COLL));
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      // sort by name
+      list.sort((a,b)=> (a.name||"").localeCompare(b.name||""));
+      fsRules = list;
+      return list;
     }
 
-    function setCollapsed(elId, btnId, collapsed, showText="Show", hideText="Hide") {
-      const el = document.getElementById(elId);
-      const btn = document.getElementById(btnId);
-      if (!el || !btn) return;
-      if (collapsed) {
-        el.classList.remove("is-open");
-        btn.textContent = showText;
+    async function saveRuleToFirestore(rule) {
+      // new rule
+      if (!editingRuleId) {
+        await addDoc(collection(db, RULES_COLL), {
+          ...rule,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
       } else {
-        el.classList.add("is-open");
-        btn.textContent = hideText;
+        await updateDoc(doc(db, RULES_COLL, editingRuleId), {
+          ...rule,
+          updatedAt: serverTimestamp()
+        });
       }
     }
 
-    function setPanelCollapsed(collapsed) {
-      setCollapsed("rulesBody","btnToggleRulesPanel",collapsed,"Show Panel","Hide Panel");
-      localStorage.setItem(RULES_PANEL_KEY, collapsed ? "1" : "0");
+    async function deleteRuleFromFirestore(id) {
+      await deleteDoc(doc(db, RULES_COLL, id));
     }
-    function setTableCollapsed(collapsed) {
-      setCollapsed("rulesTableWrap","btnToggleRulesTable",collapsed,"Show Table","Hide Table");
-      localStorage.setItem(RULES_TABLE_KEY, collapsed ? "1" : "0");
+
+    async function toggleRuleActive(id, active) {
+      await updateDoc(doc(db, RULES_COLL, id), { active, updatedAt: serverTimestamp() });
+    }
+
+    async function updateRuleLastRun(id, isoDate) {
+      await updateDoc(doc(db, RULES_COLL, id), { lastRunDate: isoDate, updatedAt: serverTimestamp() });
     }
     // =========================================================
 
@@ -446,6 +412,32 @@
       return `${yyyy}-${mm}-${dd}`;
     }
 
+    function setRuleMsg(text) {
+      const el = document.getElementById("ruleMsg");
+      if (el) el.textContent = text || "";
+    }
+
+    function setCollapsed(elId, btnId, collapsed, showText="Show", hideText="Hide") {
+      const el = document.getElementById(elId);
+      const btn = document.getElementById(btnId);
+      if (!el || !btn) return;
+      if (collapsed) { el.classList.remove("is-open"); btn.textContent = showText; }
+      else { el.classList.add("is-open"); btn.textContent = hideText; }
+    }
+    function setPanelCollapsed(collapsed) {
+      setCollapsed("rulesBody","btnToggleRulesPanel",collapsed,"Show Panel","Hide Panel");
+      localStorage.setItem(RULES_PANEL_KEY, collapsed ? "1" : "0");
+    }
+    function setTableCollapsed(collapsed) {
+      setCollapsed("rulesTableWrap","btnToggleRulesTable",collapsed,"Show Table","Hide Table");
+      localStorage.setItem(RULES_TABLE_KEY, collapsed ? "1" : "0");
+    }
+
+    function setBalanceListCollapsed(collapsed) {
+      setCollapsed("balanceListBody","btnToggleBalanceList",collapsed,"Show Table","Hide Table");
+      localStorage.setItem(BAL_LIST_KEY, collapsed ? "1" : "0");
+    }
+
     // -------- MMK rows (+) --------
     let mmkItems = []; // [{amount:""|number, note:string}]
 
@@ -476,7 +468,7 @@
         inpAmt.type = "number";
         inpAmt.step = "0.01";
         inpAmt.placeholder = "MMK";
-        inpAmt.value = (it.amount ?? ""); // empty start
+        inpAmt.value = (it.amount ?? "");
         inpAmt.oninput = () => {
           const raw = inpAmt.value;
           mmkItems[idx].amount = raw === "" ? "" : (parseFloat(raw) || 0);
@@ -563,32 +555,6 @@
       };
     }
 
-    function fillForm(row) {
-      const ids = [
-        "date","YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM",
-        "cash","otherDebit","rate","total","totalBeforeOther","minusOther","totalOther"
-      ];
-      ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (id === "date") el.value = row.date || "";
-        else el.value = (row[id] === undefined || row[id] === null || row[id] === "") ? "" : format2(row[id]);
-      });
-
-      mmkItems = Array.isArray(row.mmkItems)
-        ? row.mmkItems.map(x => ({ amount: (x.amount ?? ""), note: x.note || "" }))
-        : [];
-
-      const oldMMK = parseFloat(row.MMK);
-      if (mmkItems.length === 0 && !isNaN(oldMMK) && oldMMK !== 0) {
-        mmkItems = [{ amount: oldMMK, note: "Imported" }];
-      }
-
-      renderMMKLines();
-      syncMMKTotal();
-      recalc();
-    }
-
     function clearForm() {
       document.getElementById("balanceForm").reset();
       mmkItems = [];
@@ -609,12 +575,8 @@
         return [];
       }
     }
-    async function saveBalanceDoc(data) {
-      await addDoc(collection(db, "daily_balance"), data);
-    }
-    async function deleteBalance(id) {
-      await deleteDoc(doc(db, "daily_balance", id));
-    }
+    async function saveBalanceDoc(data) { await addDoc(collection(db, "daily_balance"), data); }
+    async function deleteBalance(id) { await deleteDoc(doc(db, "daily_balance", id)); }
     async function clearAllBalanceDocs() {
       const snap = await getDocs(collection(db, "daily_balance"));
       const tasks = [];
@@ -644,9 +606,7 @@
 
         const totalFromMMK = row.total || 0;
         const originalTotal =
-          (typeof row.totalBeforeOther === "number")
-            ? row.totalBeforeOther
-            : round2(sumTHB + totalFromMMK);
+          (typeof row.totalBeforeOther === "number") ? row.totalBeforeOther : round2(sumTHB + totalFromMMK);
 
         const tr = document.createElement("tr");
         const keys = [
@@ -656,12 +616,8 @@
         keys.forEach(key => {
           const td = document.createElement("td");
           const v  = row[key];
-          if (key === "date") {
-            td.textContent = v || "";
-            td.style.textAlign = "center";
-          } else {
-            td.textContent = (v === undefined || v === null || v === "") ? "" : format2(v);
-          }
+          if (key === "date") { td.textContent = v || ""; td.style.textAlign = "center"; }
+          else { td.textContent = (v === undefined || v === null || v === "") ? "" : format2(v); }
           tr.appendChild(td);
         });
 
@@ -697,19 +653,32 @@
         const btnEdit = document.createElement("button");
         btnEdit.textContent = "Edit";
         btnEdit.className = "btn-small btn-secondary";
-        btnEdit.onclick = () => fillForm({ ...row, totalBeforeOther: originalTotal });
+        btnEdit.onclick = () => {
+          document.getElementById("pDate").value = txn.date || isoToday();
+          document.getElementById("pName").value = name;
+          document.getElementById("pIn").value   = (txn.cashIn  ?? 0) ? txn.cashIn  : "";
+          document.getElementById("pOut").value  = (txn.cashOut ?? 0) ? txn.cashOut : "";
+          document.getElementById("pDesc").value = txn.desc || "";
+
+          editingTxnId = txn.id;
+          editingTxnExtra = {};
+          if (txn.isAuto !== undefined) editingTxnExtra.isAuto = txn.isAuto;
+          if (txn.autoDate) editingTxnExtra.autoDate = txn.autoDate;
+          if (txn.autoRuleId) editingTxnExtra.autoRuleId = txn.autoRuleId;
+
+          document.getElementById("btnSavePerson").textContent = "Update Txn";
+          window.scrollTo({ top: document.getElementById("peopleForm").getBoundingClientRect().top + window.scrollY - 20, behavior: "smooth" });
+        };
 
         const btnDel = document.createElement("button");
         btnDel.textContent = "Delete";
         btnDel.className = "btn-small btn-danger";
-        btnDel.style.marginLeft = "4px";
         btnDel.onclick = async () => {
           if (!confirm("Delete record for " + (row.date || "") + " ?")) return;
           await deleteBalance(row.id);
           await renderBalanceTable();
           alert("Deleted ✔");
         };
-
         tdAction.appendChild(btnEdit);
         tdAction.appendChild(btnDel);
         tr.appendChild(tdAction);
@@ -720,15 +689,13 @@
       const summary = document.getElementById("profitSummary");
       if (startBalance !== null && lastBalance !== null) {
         const profit = lastBalance - startBalance;
-        summary.textContent =
-          `Start Balance: ${format2(startBalance)} | Latest Balance: ${format2(lastBalance)} | Profit/Loss: ${format2(profit)}`;
-      } else {
-        summary.textContent = "No balance data yet.";
-      }
+        summary.textContent = `Start: ${format2(startBalance)} | Latest: ${format2(lastBalance)} | P/L: ${format2(profit)}`;
+      } else summary.textContent = "No balance data yet.";
     }
 
-    // -------- Firestore: other_people_txn (ledger) --------
+    // -------- Ledger: other_people_txn --------
     let editingTxnId = null;
+    let editingTxnExtra = null;
     let lastBalanceByNameCache = {};
 
     async function fetchAllPeopleTxns() {
@@ -744,30 +711,16 @@
     }
 
     async function savePersonTxn(txn) {
-      if (editingTxnId) {
-        await setDoc(doc(db, "other_people_txn", editingTxnId), txn);
-      } else {
-        await addDoc(collection(db, "other_people_txn"), txn);
-      }
+      if (editingTxnId) await setDoc(doc(db, "other_people_txn", editingTxnId), txn);
+      else await addDoc(collection(db, "other_people_txn"), txn);
     }
 
-    async function deletePersonTxn(id) {
-      await deleteDoc(doc(db, "other_people_txn", id));
-    }
-
-    function fillPersonForm(txn) {
-      document.getElementById("pDate").value = txn.date || "";
-      document.getElementById("pName").value = txn.name || "";
-      document.getElementById("pIn").value   = txn.cashIn  ?? "";
-      document.getElementById("pOut").value  = txn.cashOut ?? "";
-      document.getElementById("pDesc").value = txn.desc || "";
-      editingTxnId = txn.id;
-      document.getElementById("btnSavePerson").textContent = "Update Txn";
-    }
+    async function deletePersonTxn(id) { await deleteDoc(doc(db, "other_people_txn", id)); }
 
     function clearPersonForm() {
       document.getElementById("peopleForm").reset();
       editingTxnId = null;
+      editingTxnExtra = null;
       document.getElementById("btnSavePerson").textContent = "Save Txn";
     }
 
@@ -847,12 +800,26 @@
         const btnEdit = document.createElement("button");
         btnEdit.textContent = "Edit";
         btnEdit.className = "btn-small btn-secondary";
-        btnEdit.onclick = () => fillPersonForm(txn);
+        btnEdit.onclick = () => {
+          document.getElementById("pDate").value = txn.date || isoToday();
+          document.getElementById("pName").value = name;
+          document.getElementById("pIn").value   = (txn.cashIn  ?? 0) ? txn.cashIn  : "";
+          document.getElementById("pOut").value  = (txn.cashOut ?? 0) ? txn.cashOut : "";
+          document.getElementById("pDesc").value = txn.desc || "";
+
+          editingTxnId = txn.id;
+          editingTxnExtra = {};
+          if (txn.isAuto !== undefined) editingTxnExtra.isAuto = txn.isAuto;
+          if (txn.autoDate) editingTxnExtra.autoDate = txn.autoDate;
+          if (txn.autoRuleId) editingTxnExtra.autoRuleId = txn.autoRuleId;
+
+          document.getElementById("btnSavePerson").textContent = "Update Txn";
+          window.scrollTo({ top: document.getElementById("peopleForm").getBoundingClientRect().top + window.scrollY - 20, behavior: "smooth" });
+        };
 
         const btnDel = document.createElement("button");
         btnDel.textContent = "Delete";
         btnDel.className = "btn-small btn-danger";
-        btnDel.style.marginLeft = "4px";
         btnDel.onclick = async () => {
           if (!confirm("Delete this transaction for " + name + " ?")) return;
           await deletePersonTxn(txn.id);
@@ -878,15 +845,12 @@
 
       let selectedBalanceText = "-";
       if (currentFilter && lastBalanceByName[currentFilter] !== undefined) {
-        const bal = lastBalanceByName[currentFilter];
-        selectedBalanceText = `${currentFilter} : ${format2(bal)} ဘတ်`;
-      } else if (!currentFilter) {
-        selectedBalanceText = "All persons";
-      }
+        selectedBalanceText = `${currentFilter} : ${format2(lastBalanceByName[currentFilter])} ဘတ်`;
+      } else if (!currentFilter) selectedBalanceText = "All persons";
       document.getElementById("ledgerSelectedBalance").textContent = selectedBalanceText;
     }
 
-    // -------- Ledger export JSON --------
+    // -------- Ledger export --------
     async function exportLedgerJson() {
       const data = await fetchAllPeopleTxns();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
@@ -900,86 +864,8 @@
       URL.revokeObjectURL(url);
     }
 
-    // -------- Excel Export --------
-    async function exportBalancesExcel() {
-      if (typeof XLSX === "undefined") {
-        alert("Excel library မတင်ရသေးပါ (XLSX). Internet/AdBlock စစ်ပေးပါ။");
-        return;
-      }
-      const data = await fetchAllBalances();
-      if (!data.length) { alert("Daily balance data မရှိသေးပါ"); return; }
-
-      data.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
-      let prevTotal = null;
-
-      const rows = [];
-      const header = [
-        "Date","YBBL","YK+","YSCB","YKTB","YTM",
-        "HBBL","HK+","HSCB","HTM","TTM",
-        "Cash","Other Debit","MMK","Rate",
-        "Total (THB)","Original Total","Other Money (-)","Total_Other","Change"
-      ];
-      rows.push(header);
-
-      data.forEach(row => {
-        const bankFields = [
-          "YBBL","YKp","YSCB","YKTB","YTM",
-          "HBBL","HKp","HSCB","HTM","TTM",
-          "cash","otherDebit"
-        ];
-        let sumTHB = 0;
-        bankFields.forEach(id => { sumTHB += (row[id] || 0); });
-
-        const totalFromMMK = row.total || 0;
-        const originalTotal =
-          (typeof row.totalBeforeOther === "number")
-            ? row.totalBeforeOther
-            : round2(sumTHB + totalFromMMK);
-
-        let change = "";
-        if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
-          if (prevTotal !== null) {
-            const diff = row.totalOther - prevTotal;
-            change = diff === 0 ? "" : format2(diff);
-          }
-          prevTotal = row.totalOther;
-        }
-
-        rows.push([
-          row.date || "",
-          round2(row.YBBL || 0),
-          round2(row.YKp  || 0),
-          round2(row.YSCB || 0),
-          round2(row.YKTB || 0),
-          round2(row.YTM  || 0),
-          round2(row.HBBL || 0),
-          round2(row.HKp  || 0),
-          round2(row.HSCB || 0),
-          round2(row.HTM  || 0),
-          round2(row.TTM  || 0),
-          round2(row.cash || 0),
-          round2(row.otherDebit || 0),
-          round2(row.MMK || 0),
-          round2(row.rate || 0),
-          round2(row.total || 0),
-          round2(originalTotal),
-          round2(row.minusOther || 0),
-          round2(row.totalOther || 0),
-          change === "" ? "" : round2(parseFloat(change))
-        ]);
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "DailyBalance");
-      XLSX.writeFile(wb, "daily_balance.xlsx");
-    }
-
     async function exportLedgerExcel() {
-      if (typeof XLSX === "undefined") {
-        alert("Excel library မတင်ရသေးပါ (XLSX). Internet/AdBlock စစ်ပေးပါ။");
-        return;
-      }
+      if (typeof XLSX === "undefined") { alert("Excel library မတင်ရသေးပါ"); return; }
       const data = await fetchAllPeopleTxns();
       if (!data.length) { alert("Ledger data မရှိသေးပါ"); return; }
 
@@ -990,9 +876,7 @@
       });
 
       const balancesByName = {};
-      const rows = [];
-      const header = ["Date","Name","Description","Cash In","Cash Out","Balance (Per Name)"];
-      rows.push(header);
+      const rows = [["Date","Name","Description","Cash In","Cash Out","Balance (Per Name)"]];
 
       data.forEach(txn => {
         const name = txn.name || "";
@@ -1001,9 +885,8 @@
 
         if (!(name in balancesByName)) balancesByName[name] = 0;
         balancesByName[name] += cin - cout;
-        const bal = balancesByName[name];
 
-        rows.push([ txn.date || "", name, txn.desc || "", round2(cin), round2(cout), round2(bal) ]);
+        rows.push([ txn.date || "", name, txn.desc || "", round2(cin), round2(cout), round2(balancesByName[name]) ]);
       });
 
       const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -1014,41 +897,36 @@
 
     // -------- Manual Auto Cash Out (partial) --------
     async function autoCashOutAndSave() {
-      const inputName = document.getElementById("pName").value.trim();
-      const filterName = document.getElementById("personFilter").value || "";
-      const name = inputName || filterName;
-
+      const name = document.getElementById("pName").value.trim() || (document.getElementById("personFilter").value || "");
       if (!name) { alert("Name ထည့်ပါ (သို့) Filter မှာ Name ရွေးပါ"); return; }
 
       const bal = lastBalanceByNameCache[name];
       if (bal === undefined) { alert(`"${name}" အတွက် Ledger data မတွေ့ပါ`); return; }
-      if (!(bal > 0)) { alert(`"${name}" ရဲ့ Balance က ${format2(bal)} ဖြစ်လို့ Cash Out မလုပ်ပါ`); return; }
+      if (!(bal > 0)) { alert(`"${name}" Balance = ${format2(bal)} ဖြစ်လို့ Cash Out မလုပ်ပါ`); return; }
 
-      let date = document.getElementById("pDate").value;
-      if (!date) {
-        date = isoToday();
-        document.getElementById("pDate").value = date;
-      }
+      let date = document.getElementById("pDate").value || isoToday();
+      document.getElementById("pDate").value = date;
 
       const req = parseFloat(document.getElementById("pAutoOut").value);
       if (isNaN(req) || req <= 0) { alert("Auto Cash Out Amount ထည့်ပါ (ဥပမာ 100)"); return; }
 
       const pay = Math.min(req, bal);
 
-      const txn = {
+      await addDoc(collection(db, "other_people_txn"), {
         date, name,
         cashIn: 0,
         cashOut: round2(pay),
-        desc: `Auto Cash Out (${format2(pay)} of ${format2(bal)})`
-      };
+        desc: `Auto Cash Out (${format2(pay)} of ${format2(bal)})`,
+        isAuto: false
+      });
 
-      editingTxnId = null;
-      await savePersonTxn(txn);
       await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
       alert(`Auto Cash Out Saved ✔  ${name} - ${format2(pay)} บาท`);
     }
 
-    // -------- Rules UI --------
+    // =========================================================
+    // ✅ RULE UI (Firestore)
+    // =========================================================
     function fillRuleForm(r) {
       document.getElementById("rName").value = r.name || "";
       document.getElementById("rAmount").value = r.amountPerDay ?? "";
@@ -1066,86 +944,91 @@
       setRuleMsg("");
     }
 
-    function renderRulesTable() {
+    async function renderRulesTableFromFS() {
+      await fetchAllRules();
       const tbody = document.querySelector("#rulesTable tbody");
-      if (!tbody) return;
       tbody.innerHTML = "";
 
-      localRules
-        .slice()
-        .sort((a,b)=> (a.name||"").localeCompare(b.name||""))
-        .forEach(r => {
-          const tr = document.createElement("tr");
+      fsRules.forEach(r => {
+        const tr = document.createElement("tr");
 
-          const tdName = document.createElement("td");
-          tdName.textContent = r.name || "";
-          tdName.style.textAlign = "left";
-          tr.appendChild(tdName);
+        const tdName = document.createElement("td");
+        tdName.textContent = r.name || "";
+        tdName.style.textAlign = "left";
+        tr.appendChild(tdName);
 
-          const tdAmt = document.createElement("td");
-          tdAmt.textContent = format2(r.amountPerDay || 0);
-          tr.appendChild(tdAmt);
+        const tdAmt = document.createElement("td");
+        tdAmt.textContent = format2(r.amountPerDay || 0);
+        tr.appendChild(tdAmt);
 
-          const tdStart = document.createElement("td");
-          tdStart.textContent = r.startDate || "";
-          tdStart.style.textAlign = "center";
-          tr.appendChild(tdStart);
+        const tdStart = document.createElement("td");
+        tdStart.textContent = r.startDate || "";
+        tdStart.style.textAlign = "center";
+        tr.appendChild(tdStart);
 
-          const tdEnd = document.createElement("td");
-          tdEnd.textContent = r.endDate || "";
-          tdEnd.style.textAlign = "center";
-          tr.appendChild(tdEnd);
+        const tdEnd = document.createElement("td");
+        tdEnd.textContent = r.endDate || "";
+        tdEnd.style.textAlign = "center";
+        tr.appendChild(tdEnd);
 
-          const tdActive = document.createElement("td");
-          tdActive.textContent = r.active ? "YES" : "NO";
-          tdActive.style.textAlign = "center";
-          tr.appendChild(tdActive);
+        const tdActive = document.createElement("td");
+        tdActive.textContent = r.active ? "YES" : "NO";
+        tdActive.style.textAlign = "center";
+        tr.appendChild(tdActive);
 
-          const tdAct = document.createElement("td");
-          tdAct.className = "col-actions";
+        const tdLast = document.createElement("td");
+        tdLast.textContent = r.lastRunDate || "";
+        tdLast.style.textAlign = "center";
+        tr.appendChild(tdLast);
 
-          const btnLoad = document.createElement("button");
-          btnLoad.type = "button";
-          btnLoad.className = "btn-small btn-secondary";
-          btnLoad.textContent = "Load";
-          btnLoad.onclick = () => fillRuleForm(r);
+        const tdAct = document.createElement("td");
+        tdAct.className = "col-actions";
 
-          const btnToggle = document.createElement("button");
-          btnToggle.type = "button";
-          btnToggle.className = "btn-small btn-secondary";
-          btnToggle.style.marginLeft = "4px";
-          btnToggle.textContent = r.active ? "Stop" : "Start";
-          btnToggle.onclick = () => {
-            r.active = !r.active;
-            saveRules();
-            renderRulesTable();
-          };
+        const btnLoad = document.createElement("button");
+        btnLoad.type = "button";
+        btnLoad.className = "btn-small btn-secondary";
+        btnLoad.textContent = "Load";
+        btnLoad.onclick = () => fillRuleForm(r);
 
-          const btnDel = document.createElement("button");
-          btnDel.type = "button";
-          btnDel.className = "btn-small btn-danger";
-          btnDel.style.marginLeft = "4px";
-          btnDel.textContent = "Delete";
-          btnDel.onclick = () => {
-            if (!confirm(`Delete rule for ${r.name}?`)) return;
-            localRules = localRules.filter(x => x.id !== r.id);
-            saveRules();
-            renderRulesTable();
-            if (editingRuleId === r.id) clearRuleForm();
-          };
+        const btnToggle = document.createElement("button");
+        btnToggle.type = "button";
+        btnToggle.className = "btn-small btn-secondary";
+        btnToggle.style.marginLeft = "4px";
+        btnToggle.textContent = r.active ? "Stop" : "Start";
+        btnToggle.onclick = async () => {
+          await toggleRuleActive(r.id, !r.active);
+          await renderRulesTableFromFS();
+        };
 
-          tdAct.appendChild(btnLoad);
-          tdAct.appendChild(btnToggle);
-          tdAct.appendChild(btnDel);
-          tr.appendChild(tdAct);
+        const btnDel = document.createElement("button");
+        btnDel.type = "button";
+        btnDel.className = "btn-small btn-danger";
+        btnDel.style.marginLeft = "4px";
+        btnDel.textContent = "Delete";
+        btnDel.onclick = async () => {
+          if (!confirm(`Delete rule for ${r.name}?`)) return;
+          await deleteRuleFromFirestore(r.id);
+          if (editingRuleId === r.id) clearRuleForm();
+          await renderRulesTableFromFS();
+        };
 
-          tbody.appendChild(tr);
-        });
+        tdAct.appendChild(btnLoad);
+        tdAct.appendChild(btnToggle);
+        tdAct.appendChild(btnDel);
+
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
     }
 
-    // -------- Auto Run --------
-    async function runLocalAutoRulesOnAppOpen(showMsg = false) {
-      const activeRules = localRules.filter(r => r.active);
+    // =========================================================
+    // ✅ AUTO RUN based on Firestore rules
+    // - prevents duplicates using (isAuto=true + autoRuleId + autoDate)
+    // =========================================================
+    async function runFirestoreRulesCatchUp(showMsg=false) {
+      await fetchAllRules();
+      const activeRules = fsRules.filter(r => r.active);
+
       if (!activeRules.length) {
         if (showMsg) setRuleMsg("No active rules to run.");
         return;
@@ -1202,7 +1085,7 @@
 
           if (d >= start && d <= to) {
             if (bal <= 0) {
-              r.active = false;
+              await toggleRuleActive(r.id, false);
               stopped++;
               break;
             }
@@ -1211,7 +1094,7 @@
             if (!autoKeySet.has(key)) {
               const pay = Math.min(perDay, bal);
 
-              const txn = {
+              await addDoc(collection(db, "other_people_txn"), {
                 date: d,
                 name,
                 cashIn: 0,
@@ -1220,12 +1103,11 @@
                 isAuto: true,
                 autoDate: d,
                 autoRuleId: r.id
-              };
+              });
 
-              await addDoc(collection(db, "other_people_txn"), txn);
               created++;
-
               bal -= pay;
+
               autoKeySet.add(key);
               if (!netByNameByDate[name]) netByNameByDate[name] = {};
               netByNameByDate[name][d] = (netByNameByDate[name][d] || 0) - pay;
@@ -1235,35 +1117,92 @@
           d = addDays(d, 1);
         }
 
+        // update last run
+        await updateRuleLastRun(r.id, today);
+
         if (end && to === end) {
-          r.active = false;
+          await toggleRuleActive(r.id, false);
           stopped++;
         }
       }
 
-      saveRules();
-      renderRulesTable();
-
-      if (created > 0) {
-        await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
-      }
+      if (created > 0) await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
+      await renderRulesTableFromFS();
 
       if (showMsg) setRuleMsg(`Done ✓ Created: ${created} txn | Stopped: ${stopped} rule(s)`);
     }
 
+    // -------- Export Daily Balance Excel (same as before) --------
+    async function exportBalancesExcel() {
+      if (typeof XLSX === "undefined") { alert("Excel library မတင်ရသေးပါ"); return; }
+      const data = await fetchAllBalances();
+      if (!data.length) { alert("Daily balance data မရှိသေးပါ"); return; }
+      data.sort((a,b)=> (a.date || "").localeCompare(b.date || ""));
+      let prevTotal = null;
+
+      const rows = [];
+      rows.push([
+        "Date","YBBL","YK+","YSCB","YKTB","YTM",
+        "HBBL","HK+","HSCB","HTM","TTM",
+        "Cash","Other Debit","MMK","Rate",
+        "Total (THB)","Original Total","Other Money (-)","Total_Other","Change"
+      ]);
+
+      data.forEach(row => {
+        const bankFields = ["YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM","cash","otherDebit"];
+        let sumTHB = 0; bankFields.forEach(id => { sumTHB += (row[id] || 0); });
+
+        const totalFromMMK = row.total || 0;
+        const originalTotal = (typeof row.totalBeforeOther === "number") ? row.totalBeforeOther : round2(sumTHB + totalFromMMK);
+
+        let change = "";
+        if (typeof row.totalOther === "number" && !isNaN(row.totalOther)) {
+          if (prevTotal !== null) {
+            const diff = row.totalOther - prevTotal;
+            change = diff === 0 ? "" : format2(diff);
+          }
+          prevTotal = row.totalOther;
+        }
+
+        rows.push([
+          row.date || "",
+          round2(row.YBBL || 0),
+          round2(row.YKp  || 0),
+          round2(row.YSCB || 0),
+          round2(row.YKTB || 0),
+          round2(row.YTM  || 0),
+          round2(row.HBBL || 0),
+          round2(row.HKp  || 0),
+          round2(row.HSCB || 0),
+          round2(row.HTM  || 0),
+          round2(row.TTM  || 0),
+          round2(row.cash || 0),
+          round2(row.otherDebit || 0),
+          round2(row.MMK || 0),
+          round2(row.rate || 0),
+          round2(row.total || 0),
+          round2(originalTotal),
+          round2(row.minusOther || 0),
+          round2(row.totalOther || 0),
+          change === "" ? "" : round2(parseFloat(change))
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "DailyBalance");
+      XLSX.writeFile(wb, "daily_balance.xlsx");
+    }
+
     // -------- Events --------
     document.getElementById("btnAddMMKLine").addEventListener("click", () => {
-      mmkItems.push({ amount: "", note: "" }); // start empty
+      mmkItems.push({ amount: "", note: "" });
       renderMMKLines();
       syncMMKTotal();
     });
 
-    const autoIds = [
-      "YBBL","YKp","YSCB","YKTB","YTM",
-      "HBBL","HKp","HSCB","HTM","TTM",
-      "cash","otherDebit","rate"
-    ];
-    autoIds.forEach(id => document.getElementById(id).addEventListener("input", recalc));
+    ["YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM","cash","otherDebit","rate"]
+      .forEach(id => document.getElementById(id).addEventListener("input", recalc));
 
     document.getElementById("balanceForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1272,7 +1211,7 @@
       if (!data.date) { alert("Date ထည့်ပါ"); return; }
       await saveBalanceDoc(data);
       await renderBalanceTable();
-      alert("Saved to Firebase ✔");
+      alert("Saved ✔");
     });
 
     document.getElementById("btnClearForm").addEventListener("click", clearForm);
@@ -1301,6 +1240,8 @@
 
     document.getElementById("peopleForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const wasEditing = !!editingTxnId;
+
       const date = document.getElementById("pDate").value;
       const name = document.getElementById("pName").value.trim();
       const cashIn  = parseFloat(document.getElementById("pIn").value)  || 0;
@@ -1312,14 +1253,19 @@
       if (cashIn === 0 && cashOut === 0) { alert("Cash In သို့မဟုတ် Cash Out တစ်ခုခု ထည့်ပါ"); return; }
 
       const txn = { date, name, cashIn, cashOut, desc };
+
+      // keep auto flags if editing an auto txn (so rules duplicate prevention won't break)
+      if (editingTxnExtra) Object.assign(txn, editingTxnExtra);
+
       await savePersonTxn(txn);
+
       clearPersonForm();
       await renderPeopleTableAndUpdateMinus(document.getElementById("personFilter").value || "");
-      alert("Transaction saved ✔");
+      alert(wasEditing ? "Transaction updated ✔" : "Transaction saved ✔");
     });
 
-    document.getElementById("btnClearPerson").addEventListener("click", clearPersonForm);
     document.getElementById("btnAutoCashOut").addEventListener("click", autoCashOutAndSave);
+    document.getElementById("btnClearPerson").addEventListener("click", clearPersonForm);
     document.getElementById("btnExportLedgerJson").addEventListener("click", exportLedgerJson);
     document.getElementById("btnExportLedgerExcel").addEventListener("click", exportLedgerExcel);
 
@@ -1327,11 +1273,12 @@
       renderPeopleTableAndUpdateMinus(e.target.value);
     });
 
-    // Rule form events
-    document.getElementById("ruleForm").addEventListener("submit", (e) => {
+    // Rule form submit (Firestore)
+    document.getElementById("ruleForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = document.getElementById("rName").value.trim();
-      const amt  = parseFloat(document.getElementById("rAmount").value);
+
+      const name  = document.getElementById("rName").value.trim();
+      const amt   = parseFloat(document.getElementById("rAmount").value);
       const start = document.getElementById("rStart").value;
       const end   = document.getElementById("rEnd").value;
 
@@ -1340,75 +1287,75 @@
       if (!start) { alert("Start Date ထည့်ပါ"); return; }
       if (end && end < start) { alert("End Date က Start Date ထက်နောက်ဖြစ်ရမယ်"); return; }
 
-      if (editingRuleId) {
-        const r = localRules.find(x => x.id === editingRuleId);
-        if (r) {
-          r.name = name;
-          r.amountPerDay = round2(amt);
-          r.startDate = start;
-          r.endDate = end || "";
-          r.active = true;
-        }
-      } else {
-        localRules.push({
-          id: makeId(),
-          name,
-          amountPerDay: round2(amt),
-          startDate: start,
-          endDate: end || "",
-          active: true
-        });
-      }
+      await saveRuleToFirestore({
+        name,
+        amountPerDay: round2(amt),
+        startDate: start,
+        endDate: end || "",
+        active: true
+      });
 
-      saveRules();
-      renderRulesTable();
-      clearRuleForm();
-      setRuleMsg("Saved ✓ (Rule list updated)");
+      editingRuleId = null;
+      document.getElementById("btnSaveRule").textContent = "Save Rule";
+      document.getElementById("ruleForm").reset();
+      document.getElementById("rStart").value = isoToday();
+
+      await renderRulesTableFromFS();
+      setRuleMsg("Saved ✓ (Firestore)");
+    });
+
+    document.getElementById("btnClearRuleForm").addEventListener("click", () => {
+      editingRuleId = null;
+      document.getElementById("btnSaveRule").textContent = "Save Rule";
+      document.getElementById("ruleForm").reset();
+      document.getElementById("rStart").value = isoToday();
+      setRuleMsg("");
     });
 
     document.getElementById("btnRunRulesNow").addEventListener("click", async () => {
-      await runLocalAutoRulesOnAppOpen(true);
+      await runFirestoreRulesCatchUp(true);
     });
 
-    document.getElementById("btnClearRuleForm").addEventListener("click", clearRuleForm);
-
-    // Panel / table toggles
+    // Panel/Table hide
     document.getElementById("btnToggleRulesPanel").addEventListener("click", () => {
       const body = document.getElementById("rulesBody");
-      const open = body.classList.contains("is-open");
-      setPanelCollapsed(open); // open -> collapse
+      setPanelCollapsed(body.classList.contains("is-open"));
     });
     document.getElementById("btnToggleRulesTable").addEventListener("click", () => {
       const body = document.getElementById("rulesTableWrap");
-      const open = body.classList.contains("is-open");
-      setTableCollapsed(open);
+      setTableCollapsed(body.classList.contains("is-open"));
     });
 
-    // -------- Init --------
+    
+    // Daily Balance List hide
+    document.getElementById("btnToggleBalanceList").addEventListener("click", () => {
+      const body = document.getElementById("balanceListBody");
+      setBalanceListCollapsed(body.classList.contains("is-open"));
+    });
+
+// -------- Init --------
     (async () => {
       try {
-        recalc();
-        renderMMKLines();
-        syncMMKTotal(false);
-
         document.getElementById("date").value = isoToday();
         document.getElementById("pDate").value = isoToday();
         document.getElementById("rStart").value = isoToday();
 
+        recalc();
+        renderMMKLines();
+        syncMMKTotal(false);
+
         await renderBalanceTable();
         await renderPeopleTableAndUpdateMinus("");
 
-        loadRules();
-        renderRulesTable();
+        await renderRulesTableFromFS();
 
-        // restore panel/table collapse state
-        const panelCollapsed = localStorage.getItem(RULES_PANEL_KEY) === "1";
-        const tableCollapsed = localStorage.getItem(RULES_TABLE_KEY) === "1";
-        setPanelCollapsed(panelCollapsed);
-        setTableCollapsed(tableCollapsed);
+        // default: auto hide panels on open
+        setBalanceListCollapsed(true);
+        setPanelCollapsed(true);
+        setTableCollapsed(true);
 
-        // ✅ App ဝင်တာနဲ့ Auto Run (active rules)
-        await runLocalAutoRulesOnAppOpen(false);
+        // ✅ App ဝင်တာနဲ့ Auto run (Firestore rules)
+        await runFirestoreRulesCatchUp(false);
 
         console.log("Firebase connected & data loaded.");
       } catch (err) {
