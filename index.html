@@ -561,9 +561,14 @@
       renderMMKLines();
       syncMMKTotal();
       recalc();
+      editingBalanceId = null;
+      const submitBtn = document.querySelector('#balanceForm button[type="submit"]');
+      if (submitBtn) submitBtn.textContent = 'Save';
+
     }
 
     // -------- Firestore: daily_balance --------
+    let editingBalanceId = null;
     async function fetchAllBalances() {
       try {
         const snap = await getDocs(collection(db, "daily_balance"));
@@ -575,7 +580,13 @@
         return [];
       }
     }
-    async function saveBalanceDoc(data) { await addDoc(collection(db, "daily_balance"), data); }
+    async function saveBalanceDoc(data) {
+      if (editingBalanceId) {
+        await setDoc(doc(db, "daily_balance", editingBalanceId), data);
+      } else {
+        await addDoc(collection(db, "daily_balance"), data);
+      }
+    }
     async function deleteBalance(id) { await deleteDoc(doc(db, "daily_balance", id)); }
     async function clearAllBalanceDocs() {
       const snap = await getDocs(collection(db, "daily_balance"));
@@ -654,20 +665,36 @@
         btnEdit.textContent = "Edit";
         btnEdit.className = "btn-small btn-secondary";
         btnEdit.onclick = () => {
-          document.getElementById("pDate").value = txn.date || isoToday();
-          document.getElementById("pName").value = name;
-          document.getElementById("pIn").value   = (txn.cashIn  ?? 0) ? txn.cashIn  : "";
-          document.getElementById("pOut").value  = (txn.cashOut ?? 0) ? txn.cashOut : "";
-          document.getElementById("pDesc").value = txn.desc || "";
+          // Fill main balance form for editing
+          document.getElementById("date").value = row.date || isoToday();
 
-          editingTxnId = txn.id;
-          editingTxnExtra = {};
-          if (txn.isAuto !== undefined) editingTxnExtra.isAuto = txn.isAuto;
-          if (txn.autoDate) editingTxnExtra.autoDate = txn.autoDate;
-          if (txn.autoRuleId) editingTxnExtra.autoRuleId = txn.autoRuleId;
+          const mapIds = ["YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM","cash","otherDebit","rate"];
+          mapIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const v = row[id];
+            el.value = (v === undefined || v === null || v === 0) ? (v === 0 ? "0" : "") : String(v);
+          });
 
-          document.getElementById("btnSavePerson").textContent = "Update Txn";
-          window.scrollTo({ top: document.getElementById("peopleForm").getBoundingClientRect().top + window.scrollY - 20, behavior: "smooth" });
+          // Restore MMK line items if available
+          if (Array.isArray(row.mmkItems)) {
+            mmkItems = row.mmkItems.map(x => ({
+              amount: (x && x.amount !== undefined && x.amount !== null) ? String(x.amount) : "",
+              note: (x && x.note) ? String(x.note) : ""
+            }));
+          } else {
+            mmkItems = [];
+          }
+          renderMMKLines();
+          syncMMKTotal();
+
+          recalc();
+
+          editingBalanceId = row.id;
+          const submitBtn = document.querySelector('#balanceForm button[type="submit"]');
+          if (submitBtn) submitBtn.textContent = "Update";
+
+          window.scrollTo({ top: document.getElementById("balanceForm").getBoundingClientRect().top + window.scrollY - 20, behavior: "smooth" });
         };
 
         const btnDel = document.createElement("button");
@@ -1206,12 +1233,19 @@
 
     document.getElementById("balanceForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const wasEditing = !!editingBalanceId;
       recalc();
       const data = getFormData();
       if (!data.date) { alert("Date ထည့်ပါ"); return; }
       await saveBalanceDoc(data);
       await renderBalanceTable();
-      alert("Saved ✔");
+      if (wasEditing) {
+        alert("Updated ✔");
+      } else {
+        alert("Saved ✔");
+      }
+      // After save/update, clear edit mode but keep table state
+      clearForm();
     });
 
     document.getElementById("btnClearForm").addEventListener("click", clearForm);
