@@ -60,8 +60,6 @@
     .collapsible-body.is-open { display:block; }
     
     .summary-box { margin-top:10px; padding:12px; background:#f1f5f9; border-radius:8px; }
-    .status-yes { color: #16a34a; font-weight: bold; }
-    .status-no { color: #9ca3af; }
     .info { font-size:12px; color:#4b5563; }
 
     /* Admin Modal Styles */
@@ -82,10 +80,18 @@
     .btn-close { background: transparent; border: none; font-size: 24px; color: #6b7280; cursor: pointer; line-height: 1; padding: 0; }
     .btn-close:hover { color: #dc2626; }
 
-    /* Admin Tags */
-    .bank-tag { display: inline-flex; align-items: center; background: #e5e7eb; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; margin: 4px; border: 1px solid #d1d5db; }
-    .bank-tag button { background: none; border: none; padding: 0 0 0 8px; color: #dc2626; cursor: pointer; font-weight: bold; font-size: 16px; line-height: 1; }
-    .bank-tag button:hover { color: #991b1b; }
+    /* Admin Tags and Arrows */
+    .bank-tag { display: inline-flex; align-items: center; background: #e5e7eb; padding: 6px 8px; border-radius: 20px; font-size: 13px; font-weight: 600; margin: 4px; border: 1px solid #d1d5db; }
+    .bank-tag button { background: none; border: none; padding: 0 4px; cursor: pointer; font-weight: bold; font-size: 14px; line-height: 1; }
+    .bank-tag .btn-move { color: #1b4ba0; }
+    .bank-tag .btn-move:hover:not(:disabled) { color: #1e3a8a; }
+    .bank-tag .btn-move:disabled { color: #9ca3af; cursor: not-allowed; }
+    .bank-tag .btn-del { color: #dc2626; font-size: 16px; }
+    .bank-tag .btn-del:hover { color: #991b1b; }
+    
+    /* Dynamic Bank Input Styling */
+    .dynamic-bank-label { background: #f0fdf4; border-radius: 4px; padding: 4px 6px; border: 1px solid #bbf7d0; }
+    .dynamic-bank-label input { background: #fff; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -94,7 +100,7 @@
 <header>
   <div class="header-text">
     <h1>Daily Balance Database</h1>
-    <p>Myanmar Number Fix + Dynamic Banks + Repay Logic + Export + Secured Panel</p>
+    <p>Dynamic Banks (Reorder) + Myanmar Num Fix + Repay Logic + Export</p>
   </div>
   <button id="btnOpenAdmin" class="btn-settings">⚙️ စနစ်ပြင်ဆင်ရန်</button>
 </header>
@@ -103,14 +109,13 @@
   <section class="card">
     <h2>Daily Balance (Main)</h2>
     <form id="balanceForm">
-      <label>Date <input type="date" id="date" required /></label>
+      <label style="padding: 4px 6px;">Date <input type="date" id="date" required /></label>
       
-      <div id="dynamicBankInputs" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 8px 12px; background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-         <span class="info">Loading Bank Accounts...</span>
-      </div>
+      <!-- Dynamic Bank Inputs will be injected exactly here so they align with Date -->
+      <span id="bankInputsAnchor" style="display:none;"></span>
 
-      <label style="background:#fff8e1; border-radius: 4px; padding: 4px;">Net Debt <input type="text" id="outstandingDebt" readonly/></label>
-      <label>MMK <input type="text" id="MMK" readonly/></label>
+      <label style="background:#fff8e1; border-radius: 4px; padding: 4px 6px;">Net Debt <input type="text" id="outstandingDebt" readonly/></label>
+      <label style="padding: 4px 6px;">MMK <input type="text" id="MMK" readonly/></label>
       <div style="grid-column: 1/-1;">
         <button type="button" class="btn-secondary" id="btnAddMMK">+ Add MMK Line</button>
         <div id="mmkLines"></div>
@@ -263,7 +268,7 @@
       <h2>⚙️ စနစ်ပြင်ဆင်ရန် (Bank Accounts)</h2>
       <button class="btn-close" id="btnCloseAdmin">&times;</button>
     </div>
-    <p class="info" style="margin-bottom: 15px;">ဒီနေရာမှာ ထည့်လိုက်တဲ့ ဘဏ်အမည်တွေ၊ QR အကောင့်တွေအတိုင်း Main Form နဲ့ ဇယားတွေမှာ အော်တိုပြောင်းလဲသွားပါမယ်။</p>
+    <p class="info" style="margin-bottom: 15px;">ဒီနေရာမှာ အမည်အသစ်များထည့်သွင်းခြင်း နှင့် မြားအကွက်လေးများကို နှိပ်၍ အစီအစဉ် ပြောင်းလဲခြင်းများ လုပ်ဆောင်နိုင်ပါသည်။</p>
     
     <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: flex-end;">
       <label style="flex:1;">အကောင့်အသစ်ထည့်ရန် <input type="text" id="newBankName" placeholder="e.g. AYA, KPay, Wave..." style="width:100%; margin-top: 4px;" /></label>
@@ -300,7 +305,6 @@
   const DEFAULT_BANKS = ["YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM","Cash","Other Debit"];
   const SETTINGS_DOC_ID = "bank_accounts_config";
 
-  // ကိန်းဂဏန်းတွေထဲက ကော်မာ (,) တွေကို ဖြုတ်ပြီး တွက်ချက်နိုင်အောင် စီစဉ်ထားပါသည်
   const val = (id) => { 
     const el = document.getElementById(id); 
     if(!el) return 0;
@@ -311,7 +315,7 @@
   const iso = () => new Date().toISOString().split('T')[0];
 
   // =====================================================================
-  // မြန်မာဂဏန်းများ ရိုက်သွင်းပါက အင်္ဂလိပ်ဂဏန်းသို့ အလိုအလျောက် ပြောင်းပေးမည့်စနစ် (FIXED)
+  // မြန်မာဂဏန်းများ အင်္ဂလိပ်ဂဏန်းသို့ အလိုအလျောက် ပြောင်းပေးမည့်စနစ်
   // =====================================================================
   document.addEventListener('input', function(e) {
     if (e.target.tagName === 'INPUT') {
@@ -320,12 +324,10 @@
         let start = e.target.selectionStart;
         e.target.value = e.target.value.replace(/[၀-၉]/g, match => mmNumbers[match]);
         try { e.target.setSelectionRange(start, start); } catch(err){}
-        // ပြောင်းလဲပြီးတာနဲ့ တွက်ချက်မှုတွေပါ တစ်ခါတည်း အလုပ်လုပ်သွားရန်
         e.target.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }
   });
-  // =====================================================================
 
   // 1. Password Protected Modal Logic
   const adminModal = document.getElementById('adminModal');
@@ -353,25 +355,36 @@
     renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders();
   }
 
-  // 3. Render Admin Tags
+  // 3. Render Admin Tags (With Reorder Arrows)
   function renderAdminPanel() {
     const container = document.getElementById('bankTagsContainer');
     container.innerHTML = "";
     currentBanks.forEach((bank, idx) => {
       const tag = document.createElement('span'); tag.className = 'bank-tag';
-      tag.innerHTML = `${bank} <button type="button" onclick="removeBank(${idx})">×</button>`;
+      tag.innerHTML = `
+        <button type="button" class="btn-move" onclick="moveBank(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>◀</button>
+        ${bank}
+        <button type="button" class="btn-move" onclick="moveBank(${idx}, 1)" ${idx === currentBanks.length - 1 ? 'disabled' : ''}>▶</button>
+        <button type="button" class="btn-del" onclick="removeBank(${idx})">×</button>
+      `;
       container.appendChild(tag);
     });
   }
 
-  // 4. Render Form Inputs Dynamically
+  // 4. Render Form Inputs Dynamically (Aligned with Date)
   function renderDynamicForm() {
-    const container = document.getElementById('dynamicBankInputs');
-    container.innerHTML = "";
+    // အဟောင်းတွေအရင်ဖျက်မည်
+    document.querySelectorAll('.dynamic-bank-label').forEach(el => el.remove());
+    
+    const anchor = document.getElementById('bankInputsAnchor');
     currentBanks.forEach(bank => {
       const safeId = "bank_" + bank.replace(/\s+/g, "_");
-      container.innerHTML += `<label>${bank} <input type="text" inputmode="decimal" id="${safeId}" class="calc dynamic-bank-input"/></label>`;
+      const label = document.createElement('label');
+      label.className = 'dynamic-bank-label';
+      label.innerHTML = `${bank} <input type="text" inputmode="decimal" id="${safeId}" class="calc dynamic-bank-input"/>`;
+      anchor.parentNode.insertBefore(label, anchor);
     });
+    // Reattach events
     document.querySelectorAll('.calc').forEach(i => i.addEventListener('input', recalc));
   }
 
@@ -400,6 +413,21 @@
     const name = currentBanks[idx];
     if(!confirm(`သတိပြုရန်! "${name}" ကို ဖျက်လိုက်ပါက Main Form နှင့် Table တွင် ပေါ်တော့မည်မဟုတ်ပါ။ သေချာပါသလား?`)) return;
     currentBanks.splice(idx, 1);
+    await setDoc(doc(db, "settings", SETTINGS_DOC_ID), { banks: currentBanks });
+    renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync();
+  };
+
+  // Reorder Bank Function
+  window.moveBank = async (idx, direction) => {
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= currentBanks.length) return;
+    
+    // Swap elements
+    const temp = currentBanks[idx];
+    currentBanks[idx] = currentBanks[newIdx];
+    currentBanks[newIdx] = temp;
+    
+    // Save and Re-render everything
     await setDoc(doc(db, "settings", SETTINGS_DOC_ID), { banks: currentBanks });
     renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync();
   };
@@ -627,6 +655,7 @@
     document.getElementById('btnTogglePeopleTable').onclick = function() { const b = document.getElementById('peopleTableWrap'); const o = b.classList.toggle('is-open'); this.textContent = o ? "Hide Table" : "Show Table"; };
     document.getElementById('btnToggleDebtTable').onclick = function() { const b = document.getElementById('debtTableWrap'); const o = b.classList.toggle('is-open'); this.textContent = o ? "Hide Table" : "Show Table"; };
     
+    document.querySelectorAll('.calc').forEach(i => i.addEventListener('input', recalc));
     document.getElementById('pFilter').onchange = sync; 
     document.getElementById('dFilter').onchange = sync; 
     
