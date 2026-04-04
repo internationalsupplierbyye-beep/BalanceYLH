@@ -7,8 +7,23 @@
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body { margin:0; padding:0; background:#f5f7fb; color:#111827; }
-    header { background:#1b4ba0; color:#fff; padding:16px 24px; }
-    header h1 { margin:0; font-size:20px; }
+    
+    /* HEADER STYLES */
+    header { 
+      background:#1b4ba0; color:#fff; padding:16px 24px; 
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
+    .header-text h1 { margin:0; font-size:20px; }
+    .header-text p { margin:4px 0 0 0; font-size:13px; opacity:0.9; }
+    
+    /* SETTINGS BUTTON */
+    .btn-settings {
+      background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold;
+      cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .btn-settings:hover { background: rgba(255, 255, 255, 0.3); }
+
     main { padding:16px; max-width:1300px; margin:0 auto 40px auto; }
     
     .card { background:#fff; border-radius:10px; padding:16px; margin-bottom:16px; box-shadow:0 1px 4px rgba(15,23,42,0.08); }
@@ -16,6 +31,9 @@
     label { display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight: 500; }
     input, select { padding:8px; border-radius:6px; border:1px solid #d1d5db; font-size:13px; }
     input:focus, select:focus { outline:2px solid #1b4ba0; outline-offset:1px; border-color:#1b4ba0; }
+    
+    /* ဂဏန်းအကွက်များအတွက် ညာဘက်ကပ်ရန် */
+    input[inputmode="decimal"], input[readonly] { text-align: right; }
     
     .btn-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
     button { border:none; border-radius:6px; padding:8px 14px; font-size:13px; cursor:pointer; font-weight: 500; }
@@ -45,14 +63,40 @@
     .status-yes { color: #16a34a; font-weight: bold; }
     .status-no { color: #9ca3af; }
     .info { font-size:12px; color:#4b5563; }
+
+    /* Admin Modal Styles */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.is-open { display: flex; }
+    .modal-content {
+      background: #fff; width: 100%; max-width: 600px; border-radius: 12px; 
+      padding: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      position: relative; animation: slideDown 0.3s ease-out;
+    }
+    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; }
+    .modal-header h2 { margin: 0; font-size: 18px; color: #111827; }
+    .btn-close { background: transparent; border: none; font-size: 24px; color: #6b7280; cursor: pointer; line-height: 1; padding: 0; }
+    .btn-close:hover { color: #dc2626; }
+
+    /* Admin Tags */
+    .bank-tag { display: inline-flex; align-items: center; background: #e5e7eb; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; margin: 4px; border: 1px solid #d1d5db; }
+    .bank-tag button { background: none; border: none; padding: 0 0 0 8px; color: #dc2626; cursor: pointer; font-weight: bold; font-size: 16px; line-height: 1; }
+    .bank-tag button:hover { color: #991b1b; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
 <header>
-  <h1>Daily Balance Database</h1>
-  <p>-</p>
+  <div class="header-text">
+    <h1>Daily Balance Database</h1>
+    <p>Myanmar Number Fix + Dynamic Banks + Repay Logic + Export + Secured Panel</p>
+  </div>
+  <button id="btnOpenAdmin" class="btn-settings">⚙️ စနစ်ပြင်ဆင်ရန်</button>
 </header>
 
 <main>
@@ -60,29 +104,22 @@
     <h2>Daily Balance (Main)</h2>
     <form id="balanceForm">
       <label>Date <input type="date" id="date" required /></label>
-      <label>YBBL <input type="number" id="YBBL" step="0.01" class="calc"/></label>
-      <label>YK+ <input type="number" id="YKp" step="0.01" class="calc"/></label>
-      <label>YSCB <input type="number" id="YSCB" step="0.01" class="calc"/></label>
-      <label>YKTB <input type="number" id="YKTB" step="0.01" class="calc"/></label>
-      <label>YTM <input type="number" id="YTM" step="0.01" class="calc"/></label>
-      <label>HBBL <input type="number" id="HBBL" step="0.01" class="calc"/></label>
-      <label>HK+ <input type="number" id="HKp" step="0.01" class="calc"/></label>
-      <label>HSCB <input type="number" id="HSCB" step="0.01" class="calc"/></label>
-      <label>HTM <input type="number" id="HTM" step="0.01" class="calc"/></label>
-      <label>TTM <input type="number" id="TTM" step="0.01" class="calc"/></label>
-      <label>Cash <input type="number" id="cash" step="0.01" class="calc"/></label>
-      <label>Other Debit <input type="number" id="otherDebit" step="0.01" class="calc"/></label>
-      <label style="background:#fff8e1; border-radius: 4px; padding: 4px;">Net Debt <input type="number" id="outstandingDebt" readonly/></label>
-      <label>MMK <input type="number" id="MMK" readonly/></label>
+      
+      <div id="dynamicBankInputs" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 8px 12px; background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+         <span class="info">Loading Bank Accounts...</span>
+      </div>
+
+      <label style="background:#fff8e1; border-radius: 4px; padding: 4px;">Net Debt <input type="text" id="outstandingDebt" readonly/></label>
+      <label>MMK <input type="text" id="MMK" readonly/></label>
       <div style="grid-column: 1/-1;">
         <button type="button" class="btn-secondary" id="btnAddMMK">+ Add MMK Line</button>
         <div id="mmkLines"></div>
       </div>
-      <label>Rate <input type="number" id="rate" step="0.01" class="calc"/></label>
-      <label>Total(MMK➜THB) <input type="number" id="total" readonly/></label>
-      <label>Total Before Other <input type="number" id="totalBeforeOther" readonly/></label>
-      <label>Other Money (-) <input type="number" id="minusOther" readonly/></label>
-      <label>Total_Other (Final) <input type="number" id="totalOther" readonly/></label>
+      <label>Rate <input type="text" inputmode="decimal" id="rate" class="calc"/></label>
+      <label>Total(MMK➜THB) <input type="text" id="total" readonly/></label>
+      <label>Total Before Other <input type="text" id="totalBeforeOther" readonly/></label>
+      <label>Other Money (-) <input type="text" id="minusOther" readonly/></label>
+      <label>Total_Other (Final) <input type="text" id="totalOther" readonly/></label>
       <div class="btn-row" style="grid-column: 1/-1;">
         <button type="submit" class="btn-primary" id="btnSaveMain">Save / Update</button>
         <button type="button" class="btn-excel" id="btnExportMain">Export Excel</button>
@@ -100,9 +137,7 @@
       <div class="table-container">
         <table id="dataTable">
           <thead>
-            <tr>
-              <th style="text-align:center;">Date</th><th>YBBL</th><th>YK+</th><th>YSCB</th><th>YKTB</th><th>YTM</th><th>HBBL</th><th>HK+</th><th>HSCB</th><th>HTM</th><th>TTM</th><th>Cash</th><th>Other</th><th>Debt</th><th>MMK</th><th>Rate</th><th>Total(THB)</th><th>OrigTotal</th><th>Other(-)</th><th>Final</th><th>Change</th><th style="text-align:center;">Action</th>
-            </tr>
+            <tr id="balanceTableHead"></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -115,19 +150,19 @@
     <form id="peopleForm">
       <label>Date <input type="date" id="pDate" required /></label>
       <label>Name <input type="text" id="pName" placeholder="A / Mi Htoo ..." required /></label>
-      <label>Cash In <input type="number" id="pIn" step="0.01" /></label>
-      <label>Cash Out <input type="number" id="pOut" step="0.01" /></label>
+      <label>Cash In <input type="text" inputmode="decimal" id="pIn" /></label>
+      <label>Cash Out <input type="text" inputmode="decimal" id="pOut" /></label>
       <label>Description <input type="text" id="pDesc" /></label>
       <div class="btn-row" style="grid-column: 1/-1;">
         <button type="submit" class="btn-primary" id="btnSavePerson">Save Txn</button>
-        <button type="button" class="btn-excel" id="btnExportPeople">Export Ledger</button>
+        <button type="button" class="btn-excel" id="btnExportPeople">Export Ledger Excel</button>
         <button type="button" class="btn-secondary" onclick="resetPersonForm()">Clear</button>
       </div>
     </form>
 
     <div class="card" style="margin-top:20px; background:#f8fafc; border:1px solid #e2e8f0; padding: 20px;">
       <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="margin:0; font-size:18px;">Auto Cash Out Rule (Daily) — Firestore</h3>
+        <h3 style="margin:0; font-size:18px;">Auto Cash Out Rule (Daily)</h3>
         <button class="btn-secondary" id="btnToggleRulesPanel">Show Panel</button>
       </div>
       <p class="info" style="margin-bottom: 20px;">Rule တွေကို Firestore ထဲသိမ်းထားလို့ Device အားလုံးမှာ တူတူပေါ်မယ်။</p>
@@ -135,7 +170,7 @@
       <div id="rulesBody" class="collapsible-body">
         <form id="ruleForm">
           <label>Name <input type="text" id="rName" placeholder="A / Mi Htoo ..." required/></label>
-          <label>Amount / Day (THB) <input type="number" id="rAmt" placeholder="100" required/></label>
+          <label>Amount / Day (THB) <input type="text" inputmode="decimal" id="rAmt" placeholder="100" required/></label>
           <label>Start Date <input type="date" id="rStart" required/></label>
           <label>End Date (optional) <input type="date" id="rEnd"/></label>
           <div class="btn-row" style="grid-column: 1/-1;">
@@ -177,7 +212,6 @@
           <tbody></tbody>
         </table>
       </div>
-
       <div class="summary-box">
         <span style="display:block; font-size:14px; font-weight:bold; margin-bottom:4px; color:#1b4ba0;">👤 Selected Person Balance: <span id="selBal">0.00</span></span>
         <span style="display:block; font-size:14px; font-weight:bold; margin-bottom:4px; color:#b91c1c;">💰 Total Other People Money (All): <span id="totalAll">0.00</span></span>
@@ -191,11 +225,12 @@
     <form id="debtForm" style="margin-top:10px;">
       <label>Date <input type="date" id="dDate" required /></label>
       <label>Name <input type="text" id="dName" required /></label>
-      <label style="color:#b91c1c">Debt Amount (+) <input type="number" id="dDebt" step="0.01" /></label>
-      <label style="color:#16a34a">Repay Amount (-) <input type="number" id="dRepay" step="0.01" /></label>
+      <label style="color:#b91c1c">Debt Amount (+) <input type="text" inputmode="decimal" id="dDebt" /></label>
+      <label style="color:#16a34a">Repay Amount (-) <input type="text" inputmode="decimal" id="dRepay" /></label>
       <label>Note <input type="text" id="dNote" /></label>
       <div class="btn-row" style="grid-column: 1/-1;">
         <button type="submit" class="btn-primary" id="btnSaveDebt" style="background:#f59e0b;">Save Debt Record</button>
+        <button type="button" class="btn-excel" id="btnExportDebt">Export Debt</button>
         <button type="button" class="btn-secondary" onclick="resetDebtForm()">Clear</button>
       </div>
     </form>
@@ -222,9 +257,29 @@
   </section>
 </main>
 
+<div id="adminModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>⚙️ စနစ်ပြင်ဆင်ရန် (Bank Accounts)</h2>
+      <button class="btn-close" id="btnCloseAdmin">&times;</button>
+    </div>
+    <p class="info" style="margin-bottom: 15px;">ဒီနေရာမှာ ထည့်လိုက်တဲ့ ဘဏ်အမည်တွေ၊ QR အကောင့်တွေအတိုင်း Main Form နဲ့ ဇယားတွေမှာ အော်တိုပြောင်းလဲသွားပါမယ်။</p>
+    
+    <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: flex-end;">
+      <label style="flex:1;">အကောင့်အသစ်ထည့်ရန် <input type="text" id="newBankName" placeholder="e.g. AYA, KPay, Wave..." style="width:100%; margin-top: 4px;" /></label>
+      <button type="button" class="btn-primary" id="btnAddBank" style="height: 35px;">Add</button>
+    </div>
+    
+    <h3 style="font-size: 14px; margin-bottom: 10px;">လက်ရှိအသုံးပြုနေသော အကောင့်များ</h3>
+    <div id="bankTagsContainer" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1; min-height: 100px;">
+      <span class="info">Loading...</span>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, getDoc, query, orderBy, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVcVbBPs8s9vifCkfojuMXXykOOblsWBM",
@@ -239,18 +294,126 @@
   const db = getFirestore(app);
 
   let editMainId = null, editPersonId = null, editDebtId = null, mmkItems = [];
+  
+  // DYNAMIC BANKS SYSTEM
+  let currentBanks = [];
+  const DEFAULT_BANKS = ["YBBL","YKp","YSCB","YKTB","YTM","HBBL","HKp","HSCB","HTM","TTM","Cash","Other Debit"];
+  const SETTINGS_DOC_ID = "bank_accounts_config";
 
-  const val = (id) => parseFloat(document.getElementById(id).value) || 0;
+  // ကိန်းဂဏန်းတွေထဲက ကော်မာ (,) တွေကို ဖြုတ်ပြီး တွက်ချက်နိုင်အောင် စီစဉ်ထားပါသည်
+  const val = (id) => { 
+    const el = document.getElementById(id); 
+    if(!el) return 0;
+    const v = el.value.replace(/,/g, '');
+    return parseFloat(v) || 0; 
+  };
   const fmt = (n) => Number(n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const iso = () => new Date().toISOString().split('T')[0];
+
+  // =====================================================================
+  // မြန်မာဂဏန်းများ ရိုက်သွင်းပါက အင်္ဂလိပ်ဂဏန်းသို့ အလိုအလျောက် ပြောင်းပေးမည့်စနစ် (FIXED)
+  // =====================================================================
+  document.addEventListener('input', function(e) {
+    if (e.target.tagName === 'INPUT') {
+      const mmNumbers = { '၀':'0', '၁':'1', '၂':'2', '၃':'3', '၄':'4', '၅':'5', '၆':'6', '၇':'7', '၈':'8', '၉':'9' };
+      if (/[၀-၉]/.test(e.target.value)) {
+        let start = e.target.selectionStart;
+        e.target.value = e.target.value.replace(/[၀-၉]/g, match => mmNumbers[match]);
+        try { e.target.setSelectionRange(start, start); } catch(err){}
+        // ပြောင်းလဲပြီးတာနဲ့ တွက်ချက်မှုတွေပါ တစ်ခါတည်း အလုပ်လုပ်သွားရန်
+        e.target.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  });
+  // =====================================================================
+
+  // 1. Password Protected Modal Logic
+  const adminModal = document.getElementById('adminModal');
+  document.getElementById('btnOpenAdmin').onclick = () => {
+    const pwd = prompt("Admin Password ရိုက်ထည့်ပါ:");
+    if (pwd === "158062") {
+      adminModal.classList.add('is-open');
+    } else if (pwd !== null) {
+      alert("Password မှားယွင်းနေပါသည်။ ဝင်ရောက်ခွင့်မပြုပါ။");
+    }
+  };
+  document.getElementById('btnCloseAdmin').onclick = () => adminModal.classList.remove('is-open');
+  adminModal.addEventListener('click', (e) => { if(e.target === adminModal) adminModal.classList.remove('is-open'); });
+
+  // 2. Fetch & Initialize Admin Settings
+  async function initBankSettings() {
+    const docRef = doc(db, "settings", SETTINGS_DOC_ID);
+    const snap = await getDoc(docRef);
+    if(snap.exists() && snap.data().banks) {
+      currentBanks = snap.data().banks;
+    } else {
+      currentBanks = [...DEFAULT_BANKS];
+      await setDoc(docRef, { banks: currentBanks });
+    }
+    renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders();
+  }
+
+  // 3. Render Admin Tags
+  function renderAdminPanel() {
+    const container = document.getElementById('bankTagsContainer');
+    container.innerHTML = "";
+    currentBanks.forEach((bank, idx) => {
+      const tag = document.createElement('span'); tag.className = 'bank-tag';
+      tag.innerHTML = `${bank} <button type="button" onclick="removeBank(${idx})">×</button>`;
+      container.appendChild(tag);
+    });
+  }
+
+  // 4. Render Form Inputs Dynamically
+  function renderDynamicForm() {
+    const container = document.getElementById('dynamicBankInputs');
+    container.innerHTML = "";
+    currentBanks.forEach(bank => {
+      const safeId = "bank_" + bank.replace(/\s+/g, "_");
+      container.innerHTML += `<label>${bank} <input type="text" inputmode="decimal" id="${safeId}" class="calc dynamic-bank-input"/></label>`;
+    });
+    document.querySelectorAll('.calc').forEach(i => i.addEventListener('input', recalc));
+  }
+
+  // 5. Render Table Headers Dynamically
+  function renderDynamicTableHeaders() {
+    const theadTr = document.getElementById('balanceTableHead');
+    let html = `<th style="text-align:center;">Date</th>`;
+    currentBanks.forEach(bank => { html += `<th>${bank}</th>`; });
+    html += `<th>Debt</th><th>MMK</th><th>Rate</th><th>Total(THB)</th><th>OrigTotal</th><th>Other(-)</th><th>Final</th><th>Change</th><th style="text-align:center;">Action</th>`;
+    theadTr.innerHTML = html;
+  }
+
+  // Bank Admin Actions
+  document.getElementById('btnAddBank').onclick = async () => {
+    const input = document.getElementById('newBankName');
+    const name = input.value.trim();
+    if(!name) return;
+    if(currentBanks.includes(name)) { alert("ဒီနာမည် ထည့်ပြီးသားပါ။"); return; }
+    currentBanks.push(name);
+    await setDoc(doc(db, "settings", SETTINGS_DOC_ID), { banks: currentBanks });
+    input.value = "";
+    renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync(); 
+  };
+
+  window.removeBank = async (idx) => {
+    const name = currentBanks[idx];
+    if(!confirm(`သတိပြုရန်! "${name}" ကို ဖျက်လိုက်ပါက Main Form နှင့် Table တွင် ပေါ်တော့မည်မဟုတ်ပါ။ သေချာပါသလား?`)) return;
+    currentBanks.splice(idx, 1);
+    await setDoc(doc(db, "settings", SETTINGS_DOC_ID), { banks: currentBanks });
+    renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync();
+  };
 
   function recalc() {
     let mmkTotal = mmkItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
     document.getElementById('MMK').value = mmkTotal.toFixed(2);
     const thbFromMmk = (mmkTotal / 100000) * val('rate');
     document.getElementById('total').value = thbFromMmk.toFixed(2);
-    const banks = ['YBBL','YKp','YSCB','YKTB','YTM','HBBL','HKp','HSCB','HTM','TTM','cash','otherDebit','outstandingDebt'];
-    let bankSum = banks.reduce((s, id) => s + val(id), 0);
+    
+    let bankSum = 0;
+    currentBanks.forEach(bank => { const safeId = "bank_" + bank.replace(/\s+/g, "_"); bankSum += val(safeId); });
+    bankSum += val('outstandingDebt'); 
+    
     const before = bankSum + thbFromMmk;
     document.getElementById('totalBeforeOther').value = before.toFixed(2);
     document.getElementById('totalOther').value = (before - val('minusOther')).toFixed(2);
@@ -260,7 +423,7 @@
     const area = document.getElementById('mmkLines'); area.innerHTML = "";
     mmkItems.forEach((it, idx) => {
       const row = document.createElement('div'); row.className = 'mmk-line';
-      row.innerHTML = `<input type="number" step="0.01" value="${it.amount}" placeholder="MMK"> <input type="text" value="${it.note}" placeholder="Note"> <button type="button" class="btn-danger" onclick="removeMMK(${idx})">Del</button>`;
+      row.innerHTML = `<input type="text" inputmode="decimal" value="${it.amount}" placeholder="MMK"> <input type="text" value="${it.note}" placeholder="Note"> <button type="button" class="btn-danger" onclick="removeMMK(${idx})">Del</button>`;
       row.children[0].oninput = (e) => { mmkItems[idx].amount = e.target.value; recalc(); };
       row.children[1].oninput = (e) => { mmkItems[idx].note = e.target.value; };
       area.appendChild(row);
@@ -279,12 +442,8 @@
     
     dSnap.forEach(s => {
       const d = s.data(); dNames.add(d.name);
-      const debtAmt = d.debt || 0;
-      const repayAmt = d.repay || 0;
-      const net = debtAmt - repayAmt;
-      
-      dBals[d.name] = (dBals[d.name] || 0) + net;
-      dTotalAll += net;
+      const debtAmt = d.debt || 0; const repayAmt = d.repay || 0; const net = debtAmt - repayAmt;
+      dBals[d.name] = (dBals[d.name] || 0) + net; dTotalAll += net;
 
       if(!dFilter || d.name === dFilter) {
         const safeNote = (d.note || '').replace(/'/g, "\\'");
@@ -295,7 +454,6 @@
     document.getElementById('selDebtDisplay').textContent = dFilter ? fmt(dBals[dFilter]) : "All";
     document.getElementById('outstandingDebt').value = dTotalAll.toFixed(2);
     document.getElementById('debtGrandDisplay').textContent = fmt(dTotalAll);
-    
     const dSel = document.getElementById('dFilter'); const dOld = dSel.value;
     dSel.innerHTML = '<option value="">All</option>' + Array.from(dNames).sort().map(n => `<option value="${n}" ${n===dOld?'selected':''}>${n}</option>`).join('');
 
@@ -307,8 +465,7 @@
     
     pSnap.forEach(s => {
       const d = s.data(); names.add(d.name);
-      pBals[d.name] = (pBals[d.name] || 0) + (d.cashIn - d.cashOut);
-      pTotalAll += (d.cashIn - d.cashOut);
+      pBals[d.name] = (pBals[d.name] || 0) + (d.cashIn - d.cashOut); pTotalAll += (d.cashIn - d.cashOut);
       if(!pFilter || d.name === pFilter) {
         const safeDesc = (d.desc || '').replace(/'/g, "\\'");
         pBody.innerHTML += `<tr><td style="text-align:center;">${d.date}</td><td style="text-align:left;">${d.name}</td><td style="text-align:left;">${d.desc}</td><td>${fmt(d.cashIn)}</td><td>${fmt(d.cashOut)}</td><td>${fmt(pBals[d.name])}</td><td style="text-align:center;"><button class="btn-secondary" onclick="editPerson('${s.id}', '${d.date}', '${d.name}', ${d.cashIn || 0}, ${d.cashOut || 0}, '${safeDesc}')">Edit</button> <button class="btn-danger" onclick="delDoc('other_people_txn','${s.id}')">Del</button></td></tr>`;
@@ -318,30 +475,29 @@
     document.getElementById('selBal').textContent = pFilter ? fmt(pBals[pFilter]) : "All";
     document.getElementById('totalAll').textContent = fmt(pTotalAll);
     document.getElementById('minusOther').value = pTotalAll.toFixed(2);
-    
     const pSel = document.getElementById('pFilter'); const old = pSel.value;
     pSel.innerHTML = '<option value="">All</option>' + Array.from(names).sort().map(n => `<option value="${n}" ${n===old?'selected':''}>${n}</option>`).join('');
 
     const bulkBtn = document.getElementById('btnBulkDelPerson');
-    if(pFilter) {
-      bulkBtn.style.display = 'inline-block';
-      bulkBtn.textContent = `Delete ALL for "${pFilter}"`;
-    } else {
-      bulkBtn.style.display = 'none';
-    }
+    if(pFilter) { bulkBtn.style.display = 'inline-block'; bulkBtn.textContent = `Delete ALL for "${pFilter}"`; } 
+    else { bulkBtn.style.display = 'none'; }
 
     // 3. Balance List
     const bSnap = await getDocs(query(collection(db, "daily_balance"), orderBy("date", "asc")));
     const bBody = document.querySelector("#dataTable tbody"); bBody.innerHTML = "";
-    let last = null;
-    let balanceRowsHTML = []; 
+    let last = null; let balanceRowsHTML = []; 
 
     bSnap.forEach(s => {
       const d = s.data(); const chg = last !== null ? (d.totalOther - last) : 0;
-      balanceRowsHTML.push(`<tr><td style="text-align:center;">${d.date}</td><td>${fmt(d.YBBL)}</td><td>${fmt(d.YKp)}</td><td>${fmt(d.YSCB)}</td><td>${fmt(d.YKTB)}</td><td>${fmt(d.YTM)}</td><td>${fmt(d.HBBL)}</td><td>${fmt(d.HKp)}</td><td>${fmt(d.HSCB)}</td><td>${fmt(d.HTM)}</td><td>${fmt(d.TTM)}</td><td>${fmt(d.cash)}</td><td>${fmt(d.otherDebit)}</td><td>${fmt(d.outstandingDebt)}</td><td>${fmt(d.MMK)}</td><td>${fmt(d.rate)}</td><td>${fmt(d.total)}</td><td>${fmt(d.totalBeforeOther)}</td><td>${fmt(d.minusOther)}</td><td style="color:#1b4ba0; font-weight:bold;">${fmt(d.totalOther)}</td><td style="color:${chg>=0?'#16a34a':'#dc2626'}; font-weight:bold;">${fmt(chg)}</td><td style="text-align:center;"><button class="btn-secondary" onclick="editMain('${s.id}')">Edit</button> <button class="btn-danger" onclick="delDoc('daily_balance','${s.id}')">Del</button></td></tr>`);
-      last = d.totalOther;
+      let rowHtml = `<tr><td style="text-align:center;">${d.date}</td>`;
+      currentBanks.forEach(bank => {
+        const safeId = "bank_" + bank.replace(/\s+/g, "_");
+        let v = (d[safeId] !== undefined) ? d[safeId] : (d[bank] !== undefined ? d[bank] : 0);
+        rowHtml += `<td>${fmt(v)}</td>`;
+      });
+      rowHtml += `<td>${fmt(d.outstandingDebt)}</td><td>${fmt(d.MMK)}</td><td>${fmt(d.rate)}</td><td>${fmt(d.total)}</td><td>${fmt(d.totalBeforeOther)}</td><td>${fmt(d.minusOther)}</td><td style="color:#1b4ba0; font-weight:bold;">${fmt(d.totalOther)}</td><td style="color:${chg>=0?'#16a34a':'#dc2626'}; font-weight:bold;">${fmt(chg)}</td><td style="text-align:center;"><button class="btn-secondary" onclick="editMain('${s.id}')">Edit</button> <button class="btn-danger" onclick="delDoc('daily_balance','${s.id}')">Del</button></td></tr>`;
+      balanceRowsHTML.push(rowHtml); last = d.totalOther;
     });
-
     bBody.innerHTML = balanceRowsHTML.reverse().join("");
 
     // 4. Rules
@@ -370,68 +526,88 @@
   
   window.editMain = async (id) => {
     const snap = await getDocs(collection(db, "daily_balance")); const d = snap.docs.find(s => s.id === id).data();
-    editMainId = id; document.getElementById('date').value = d.date; document.getElementById('YBBL').value = d.YBBL; document.getElementById('YKp').value = d.YKp; document.getElementById('YSCB').value = d.YSCB; document.getElementById('YKTB').value = d.YKTB; document.getElementById('YTM').value = d.YTM; document.getElementById('HBBL').value = d.HBBL; document.getElementById('HKp').value = d.HKp; document.getElementById('HSCB').value = d.HSCB; document.getElementById('HTM').value = d.HTM; document.getElementById('TTM').value = d.TTM; document.getElementById('cash').value = d.cash; document.getElementById('otherDebit').value = d.otherDebit; document.getElementById('rate').value = d.rate; mmkItems = d.mmkItems || []; renderMMK(); 
-    document.getElementById('btnSaveMain').textContent = "Update Balance";
-    document.getElementById('balanceForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    editMainId = id; document.getElementById('date').value = d.date; 
+    currentBanks.forEach(bank => { const safeId = "bank_" + bank.replace(/\s+/g, "_"); let v = (d[safeId] !== undefined) ? d[safeId] : (d[bank] !== undefined ? d[bank] : 0); const el = document.getElementById(safeId); if(el) el.value = v || ''; });
+    document.getElementById('rate').value = d.rate || ''; mmkItems = d.mmkItems || []; renderMMK(); document.getElementById('btnSaveMain').textContent = "Update Balance"; document.getElementById('balanceForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   window.bulkDeletePerson = async () => {
     const name = document.getElementById('pFilter').value;
     if(!name || !confirm(`သတိပြုရန်! "${name}" ၏ စာရင်းများအားလုံးကို အပြီးတိုင် ဖျက်ပစ်မည်မှာ သေချာပါသလား?`)) return;
     const snap = await getDocs(query(collection(db, "other_people_txn")));
-    for(let s of snap.docs) {
-      if(s.data().name === name) {
-        await deleteDoc(doc(db, "other_people_txn", s.id));
-      }
-    }
-    document.getElementById('pFilter').value = "";
-    sync();
-    alert(`"${name}" ၏ စာရင်းအားလုံး ဖျက်ပြီးပါပြီ။`);
+    for(let s of snap.docs) { if(s.data().name === name) { await deleteDoc(doc(db, "other_people_txn", s.id)); } }
+    document.getElementById('pFilter').value = ""; sync(); alert(`"${name}" ၏ စာရင်းအားလုံး ဖျက်ပြီးပါပြီ။`);
+  };
+
+  // --- EXPORT LOGIC WITH textContent FIX ---
+  document.getElementById('btnExportMain').onclick = () => {
+    const headers = ["Date", ...currentBanks, "Debt", "MMK", "Rate", "Total THB", "OrigTotal", "Other-", "Final", "Change"];
+    const rows = [headers];
+    let trs = Array.from(document.querySelectorAll("#dataTable tbody tr"));
+    trs.reverse().forEach(tr => { 
+      const row = []; 
+      tr.querySelectorAll("td").forEach((td, i) => { 
+        if(i < headers.length) {
+          row.push(td.textContent.trim().replace(/,/g, '')); 
+        }
+      }); 
+      rows.push(row); 
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); 
+    XLSX.utils.book_append_sheet(wb, ws, "DailyBalance"); 
+    XLSX.writeFile(wb, "Daily_Balance.xlsx");
+  };
+
+  document.getElementById('btnExportPeople').onclick = () => {
+    const rows = [["Date","Name","Description","Cash In","Cash Out","Balance"]];
+    document.querySelectorAll("#pTable tbody tr").forEach(tr => { 
+      const row = []; 
+      tr.querySelectorAll("td").forEach((td, i) => { 
+        if(i < 6) {
+          row.push(td.textContent.trim().replace(/,/g, '')); 
+        }
+      }); 
+      rows.push(row); 
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); 
+    XLSX.utils.book_append_sheet(wb, ws, "Ledger"); 
+    XLSX.writeFile(wb, "Ledger.xlsx");
+  };
+
+  document.getElementById('btnExportDebt').onclick = () => {
+    const rows = [["Date","Name","Note","Debt (+)","Repay (-)","Balance"]];
+    document.querySelectorAll("#dTable tbody tr").forEach(tr => { 
+      const row = []; 
+      tr.querySelectorAll("td").forEach((td, i) => { 
+        if(i < 6) {
+          row.push(td.textContent.trim().replace(/,/g, '')); 
+        }
+      }); 
+      rows.push(row); 
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); 
+    XLSX.utils.book_append_sheet(wb, ws, "Outstanding_Debt"); 
+    XLSX.writeFile(wb, "Outstanding_Debt.xlsx");
   };
 
   // --- SUBMITS ---
-  document.getElementById('balanceForm').onsubmit = async (e) => { e.preventDefault(); const data = { date: document.getElementById('date').value, YBBL: val('YBBL'), YKp: val('YKp'), YSCB: val('YSCB'), YKTB: val('YKTB'), YTM: val('YTM'), HBBL: val('HBBL'), HKp: val('HKp'), HSCB: val('HSCB'), HTM: val('HTM'), TTM: val('TTM'), cash: val('cash'), otherDebit: val('otherDebit'), outstandingDebt: val('outstandingDebt'), MMK: val('MMK'), rate: val('rate'), total: val('total'), totalBeforeOther: val('totalBeforeOther'), minusOther: val('minusOther'), totalOther: val('totalOther'), mmkItems }; if(editMainId) await setDoc(doc(db, "daily_balance", editMainId), data); else await addDoc(collection(db, "daily_balance"), data); resetMainForm(); sync(); };
-  
+  document.getElementById('balanceForm').onsubmit = async (e) => { e.preventDefault(); let data = { date: document.getElementById('date').value, outstandingDebt: val('outstandingDebt'), MMK: val('MMK'), rate: val('rate'), total: val('total'), totalBeforeOther: val('totalBeforeOther'), minusOther: val('minusOther'), totalOther: val('totalOther'), mmkItems }; currentBanks.forEach(bank => { const safeId = "bank_" + bank.replace(/\s+/g, "_"); data[safeId] = val(safeId); }); if(editMainId) await setDoc(doc(db, "daily_balance", editMainId), data); else await addDoc(collection(db, "daily_balance"), data); resetMainForm(); sync(); };
   document.getElementById('peopleForm').onsubmit = async (e) => { e.preventDefault(); const data = { date: document.getElementById('pDate').value, name: document.getElementById('pName').value, cashIn: val('pIn'), cashOut: val('pOut'), desc: document.getElementById('pDesc').value }; if(editPersonId) await setDoc(doc(db, "other_people_txn", editPersonId), data); else await addDoc(collection(db, "other_people_txn"), data); resetPersonForm(); sync(); };
-  
   document.getElementById('debtForm').onsubmit = async (e) => { e.preventDefault(); const data = { date: document.getElementById('dDate').value, name: document.getElementById('dName').value, debt: val('dDebt'), repay: val('dRepay'), note: document.getElementById('dNote').value }; if(editDebtId) await setDoc(doc(db, "outstanding_debt", editDebtId), data); else await addDoc(collection(db, "outstanding_debt"), data); resetDebtForm(); sync(); };
-  
   document.getElementById('ruleForm').onsubmit = async (e) => { e.preventDefault(); await addDoc(collection(db, "auto_rules"), { name: document.getElementById('rName').value, amt: val('rAmt'), start: document.getElementById('rStart').value, end: document.getElementById('rEnd').value, active: true, lastRun: '' }); e.target.reset(); sync(); };
 
   document.getElementById('btnRunRules').onclick = async () => {
-    const rules = await getDocs(collection(db, "auto_rules")), txns = await getDocs(collection(db, "other_people_txn"));
-    let created = 0, today = iso();
+    const rules = await getDocs(collection(db, "auto_rules")), txns = await getDocs(collection(db, "other_people_txn")); let created = 0, today = iso();
     for(let rDoc of rules.docs) {
-      const r = rDoc.data(); if(!r.active) continue;
-      let d = r.start;
+      const r = rDoc.data(); if(!r.active) continue; let d = r.start;
       while(d <= today) {
         if(r.end && d > r.end) break;
-        if(!txns.docs.find(t => t.data().autoRef === `${rDoc.id}_${d}`)) {
-          await addDoc(collection(db, "other_people_txn"), { date: d, name: r.name, cashIn: 0, cashOut: r.amt, desc: `Auto Cash Out (${r.amt} THB)`, autoRef: `${rDoc.id}_${d}` });
-          created++;
-        }
+        if(!txns.docs.find(t => t.data().autoRef === `${rDoc.id}_${d}`)) { await addDoc(collection(db, "other_people_txn"), { date: d, name: r.name, cashIn: 0, cashOut: r.amt, desc: `Auto Cash Out (${r.amt} THB)`, autoRef: `${rDoc.id}_${d}` }); created++; }
         let dateObj = new Date(d); dateObj.setDate(dateObj.getDate() + 1); d = dateObj.toISOString().split('T')[0];
       }
       await updateDoc(doc(db, "auto_rules", rDoc.id), { lastRun: today });
     }
     alert(`Done! Created ${created} transactions. Last run updated to ${today}`); sync();
-  };
-
-  document.getElementById('btnExportMain').onclick = () => {
-    const rows = [["Date","YBBL","YK+","YSCB","YKTB","YTM","HBBL","HK+","HSCB","HTM","TTM","Cash","Other","Debt","MMK","Rate","Total THB","OrigTotal","Other-","Final"]];
-    let trs = Array.from(document.querySelectorAll("#dataTable tbody tr"));
-    trs.reverse().forEach(tr => {
-      const row = []; tr.querySelectorAll("td").forEach((td, i) => { if(i < 20) row.push(td.innerText.replace(/,/g, '')); }); rows.push(row);
-    });
-    const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "DailyBalance"); XLSX.writeFile(wb, "Daily_Balance.xlsx");
-  };
-
-  document.getElementById('btnExportPeople').onclick = () => {
-    const rows = [["Date","Name","Description","Cash In","Cash Out","Balance"]];
-    document.querySelectorAll("#pTable tbody tr").forEach(tr => {
-      const row = []; tr.querySelectorAll("td").forEach((td, i) => { if(i < 6) row.push(td.innerText.replace(/,/g, '')); }); rows.push(row);
-    });
-    const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Ledger"); XLSX.writeFile(wb, "Ledger.xlsx");
   };
 
   window.resetMainForm = () => { editMainId = null; document.getElementById('balanceForm').reset(); document.getElementById('date').value = iso(); mmkItems = []; renderMMK(); document.getElementById('btnSaveMain').textContent = "Save / Update"; };
@@ -441,21 +617,20 @@
   window.delDoc = async (c, i) => { if(confirm("ဖျက်မည်မှာ သေချာပါသလား?")) { await deleteDoc(doc(db, c, i)); sync(); } };
   window.toggleRule = async (id, status) => { await updateDoc(doc(db, "auto_rules", id), { active: status }); sync(); };
 
-  window.onload = () => {
+  window.onload = async () => {
     const d = iso(); document.getElementById('date').value = d; document.getElementById('pDate').value = d; document.getElementById('dDate').value = d; document.getElementById('rStart').value = d;
     
-    // Toggle Event Listeners
+    // Setup Toggles
     document.getElementById('btnToggleList').onclick = function() { const b = document.getElementById('listCollapse'); const o = b.classList.toggle('is-open'); this.textContent = o ? "Hide Table" : "Show Table"; };
     document.getElementById('btnToggleRulesPanel').onclick = function() { const b = document.getElementById('rulesBody'); const o = b.classList.toggle('is-open'); this.textContent = o ? "Hide Panel" : "Show Panel"; };
     document.getElementById('btnToggleRulesTable').onclick = function() { const b = document.getElementById('rulesTableWrap'); const o = b.classList.toggle('is-open'); this.textContent = o ? "Hide Table" : "Show Table"; };
-    
     document.getElementById('btnTogglePeopleTable').onclick = function() { const b = document.getElementById('peopleTableWrap'); const o = b.classList.toggle('is-open'); this.textContent = o ? "Hide Table" : "Show Table"; };
     document.getElementById('btnToggleDebtTable').onclick = function() { const b = document.getElementById('debtTableWrap'); const o = b.classList.toggle('is-open'); this.textContent = o ? "Hide Table" : "Show Table"; };
     
-    document.querySelectorAll('.calc').forEach(i => i.oninput = recalc);
     document.getElementById('pFilter').onchange = sync; 
     document.getElementById('dFilter').onchange = sync; 
-    sync();
+    
+    await initBankSettings(); sync();
   };
 </script>
 </body>
