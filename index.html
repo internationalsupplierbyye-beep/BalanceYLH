@@ -70,7 +70,7 @@
     }
     .modal-overlay.is-open { display: flex; }
     .modal-content {
-      background: #fff; width: 100%; max-width: 600px; border-radius: 12px; 
+      background: #fff; width: 100%; max-width: 650px; border-radius: 12px; 
       padding: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       position: relative; animation: slideDown 0.3s ease-out;
     }
@@ -86,6 +86,8 @@
     .bank-tag .btn-move { color: #1b4ba0; }
     .bank-tag .btn-move:hover:not(:disabled) { color: #1e3a8a; }
     .bank-tag .btn-move:disabled { color: #9ca3af; cursor: not-allowed; }
+    .bank-tag .btn-edit { color: #047857; font-size: 12px; padding: 0 6px; }
+    .bank-tag .btn-edit:hover { color: #064e3b; }
     .bank-tag .btn-del { color: #dc2626; font-size: 16px; }
     .bank-tag .btn-del:hover { color: #991b1b; }
     
@@ -100,7 +102,7 @@
 <header>
   <div class="header-text">
     <h1>Daily Balance Database</h1>
-    <p>Dynamic Banks (Reorder) + Myanmar Num Fix + Repay Logic + Export</p>
+    <p>Dynamic Banks (Add/Edit/Reorder) + Myanmar Num Fix + Repay Logic + Export</p>
   </div>
   <button id="btnOpenAdmin" class="btn-settings">⚙️ စနစ်ပြင်ဆင်ရန်</button>
 </header>
@@ -111,7 +113,6 @@
     <form id="balanceForm">
       <label style="padding: 4px 6px;">Date <input type="date" id="date" required /></label>
       
-      <!-- Dynamic Bank Inputs will be injected exactly here so they align with Date -->
       <span id="bankInputsAnchor" style="display:none;"></span>
 
       <label style="background:#fff8e1; border-radius: 4px; padding: 4px 6px;">Net Debt <input type="text" id="outstandingDebt" readonly/></label>
@@ -235,7 +236,7 @@
       <label>Note <input type="text" id="dNote" /></label>
       <div class="btn-row" style="grid-column: 1/-1;">
         <button type="submit" class="btn-primary" id="btnSaveDebt" style="background:#f59e0b;">Save Debt Record</button>
-        <button type="button" class="btn-excel" id="btnExportDebt">Export Debt</button>
+        <button type="button" class="btn-excel" id="btnExportDebt">Export Debt Excel</button>
         <button type="button" class="btn-secondary" onclick="resetDebtForm()">Clear</button>
       </div>
     </form>
@@ -268,11 +269,11 @@
       <h2>⚙️ စနစ်ပြင်ဆင်ရန် (Bank Accounts)</h2>
       <button class="btn-close" id="btnCloseAdmin">&times;</button>
     </div>
-    <p class="info" style="margin-bottom: 15px;">ဒီနေရာမှာ အမည်အသစ်များထည့်သွင်းခြင်း နှင့် မြားအကွက်လေးများကို နှိပ်၍ အစီအစဉ် ပြောင်းလဲခြင်းများ လုပ်ဆောင်နိုင်ပါသည်။</p>
+    <p class="info" style="margin-bottom: 15px;">ဒီနေရာမှာ အမည်အသစ်များထည့်သွင်းခြင်း (Add)၊ ပြင်ဆင်ခြင်း (Edit) နှင့် မြားအကွက်လေးများကို နှိပ်၍ အစီအစဉ် ပြောင်းလဲခြင်းများ လုပ်ဆောင်နိုင်ပါသည်။ အမည်ဟောင်းကို ပြင်ဆင်လိုက်ပါက ယခင်စာရင်းများကိုပါ အလိုအလျောက် ပြောင်းလဲပေးမည်ဖြစ်သည်။</p>
     
     <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: flex-end;">
       <label style="flex:1;">အကောင့်အသစ်ထည့်ရန် <input type="text" id="newBankName" placeholder="e.g. AYA, KPay, Wave..." style="width:100%; margin-top: 4px;" /></label>
-      <button type="button" class="btn-primary" id="btnAddBank" style="height: 35px;">Add</button>
+      <button type="button" class="btn-primary" id="btnAddBank" style="height: 35px;">Add Account</button>
     </div>
     
     <h3 style="font-size: 14px; margin-bottom: 10px;">လက်ရှိအသုံးပြုနေသော အကောင့်များ</h3>
@@ -355,7 +356,7 @@
     renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders();
   }
 
-  // 3. Render Admin Tags (With Reorder Arrows)
+  // 3. Render Admin Tags (With Reorder Arrows & Edit Button)
   function renderAdminPanel() {
     const container = document.getElementById('bankTagsContainer');
     container.innerHTML = "";
@@ -364,6 +365,7 @@
       tag.innerHTML = `
         <button type="button" class="btn-move" onclick="moveBank(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>◀</button>
         ${bank}
+        <button type="button" class="btn-edit" onclick="editBankName(${idx})">✏️ Edit</button>
         <button type="button" class="btn-move" onclick="moveBank(${idx}, 1)" ${idx === currentBanks.length - 1 ? 'disabled' : ''}>▶</button>
         <button type="button" class="btn-del" onclick="removeBank(${idx})">×</button>
       `;
@@ -373,7 +375,6 @@
 
   // 4. Render Form Inputs Dynamically (Aligned with Date)
   function renderDynamicForm() {
-    // အဟောင်းတွေအရင်ဖျက်မည်
     document.querySelectorAll('.dynamic-bank-label').forEach(el => el.remove());
     
     const anchor = document.getElementById('bankInputsAnchor');
@@ -384,7 +385,6 @@
       label.innerHTML = `${bank} <input type="text" inputmode="decimal" id="${safeId}" class="calc dynamic-bank-input"/>`;
       anchor.parentNode.insertBefore(label, anchor);
     });
-    // Reattach events
     document.querySelectorAll('.calc').forEach(i => i.addEventListener('input', recalc));
   }
 
@@ -409,6 +409,58 @@
     renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync(); 
   };
 
+  // Edit Bank Name Logic (With Auto-Migration of old data)
+  window.editBankName = async (idx) => {
+    const oldName = currentBanks[idx];
+    const newName = prompt(`"${oldName}" အမည်ကို ပြင်ဆင်ရန်:`, oldName);
+    
+    if (!newName || newName.trim() === "" || newName === oldName) return;
+    const trimmedNewName = newName.trim();
+
+    if (currentBanks.includes(trimmedNewName)) {
+      alert("ဒီနာမည် (အမည်တူ) ရှိပြီးသားပါ။ အခြားအမည်ပြောင်းပါ။");
+      return;
+    }
+
+    if (!confirm(`"${oldName}" ကို "${trimmedNewName}" အဖြစ် ပြောင်းလဲမည်မှာ သေချာပါသလား?\n(ယခင်စာရင်းများအားလုံးကိုပါ အလိုအလျောက် ပြောင်းလဲပေးပါမည်။)`)) return;
+
+    // 1. Update config
+    currentBanks[idx] = trimmedNewName;
+    await setDoc(doc(db, "settings", SETTINGS_DOC_ID), { banks: currentBanks });
+
+    // 2. Migrate existing data in daily_balance
+    const oldSafeId = "bank_" + oldName.replace(/\s+/g, "_");
+    const newSafeId = "bank_" + trimmedNewName.replace(/\s+/g, "_");
+
+    const snap = await getDocs(collection(db, "daily_balance"));
+    let updateCount = 0;
+    const batchPromises = [];
+
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const updateData = {};
+      
+      // Fallback for legacy DB structure vs new DB structure
+      if (d[oldSafeId] !== undefined) {
+        updateData[newSafeId] = d[oldSafeId];
+      } else if (d[oldName] !== undefined) {
+        updateData[newSafeId] = d[oldName];
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        batchPromises.push(updateDoc(doc(db, "daily_balance", docSnap.id), updateData));
+        updateCount++;
+      }
+    });
+
+    if (batchPromises.length > 0) {
+      await Promise.all(batchPromises);
+    }
+
+    renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync();
+    alert(`အမည်ပြင်ဆင်ခြင်း အောင်မြင်ပါသည်။ (မှတ်တမ်း ${updateCount} ခု ကို ပြင်ဆင်ပြီးပါပြီ)`);
+  };
+
   window.removeBank = async (idx) => {
     const name = currentBanks[idx];
     if(!confirm(`သတိပြုရန်! "${name}" ကို ဖျက်လိုက်ပါက Main Form နှင့် Table တွင် ပေါ်တော့မည်မဟုတ်ပါ။ သေချာပါသလား?`)) return;
@@ -421,13 +473,10 @@
   window.moveBank = async (idx, direction) => {
     const newIdx = idx + direction;
     if (newIdx < 0 || newIdx >= currentBanks.length) return;
-    
-    // Swap elements
     const temp = currentBanks[idx];
     currentBanks[idx] = currentBanks[newIdx];
     currentBanks[newIdx] = temp;
     
-    // Save and Re-render everything
     await setDoc(doc(db, "settings", SETTINGS_DOC_ID), { banks: currentBanks });
     renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync();
   };
