@@ -107,7 +107,7 @@
 <header>
   <div class="header-text">
     <h1>Daily Balance Database</h1>
-    <p>GitHub Assets/Logo Mapping + Myanmar Num Fix + Repay Logic + Export</p>
+    <p>Old Data Restored + GitHub Logo Mapping + Myanmar Num Fix</p>
   </div>
   <button id="btnOpenAdmin" class="btn-settings">⚙️ စနစ်ပြင်ဆင်ရန်</button>
 </header>
@@ -166,7 +166,7 @@
       <label>Description <input type="text" id="pDesc" /></label>
       <div class="btn-row" style="grid-column: 1/-1;">
         <button type="submit" class="btn-primary" id="btnSavePerson">Save Txn</button>
-        <button type="button" class="btn-excel" id="btnExportPeople">Export Ledger</button>
+        <button type="button" class="btn-excel" id="btnExportPeople">Export Ledger Excel</button>
         <button type="button" class="btn-secondary" onclick="resetPersonForm()">Clear</button>
       </div>
     </form>
@@ -316,7 +316,9 @@
     { name: "HKp", logo: "" }, { name: "HSCB", logo: "" }, { name: "HTM", logo: "" }, 
     { name: "TTM", logo: "" }, { name: "Cash", logo: "" }, { name: "Other Debit", logo: "" }
   ];
-  const SETTINGS_DOC_ID = "bank_accounts_config_v2";
+  
+  // 🔹 ပျောက်သွားသော ဒေတာများကို ပြန်ခေါ်ရန် Settings ဖိုင်ဟောင်းနာမည်ကို ပြန်သုံးထားပါသည် 🔹
+  const SETTINGS_DOC_ID = "bank_accounts_config";
 
   // =====================================================================
   // 🔹 LOGO HANDLER (UPDATED for assets/logo/ path)
@@ -324,7 +326,6 @@
   function getLogoHtml(bankObj) {
     if(bankObj && bankObj.logo && bankObj.logo.trim() !== "") {
       let imgName = bankObj.logo.trim();
-      // "assets/logo/" အောက်ကို သွားရှာဖို့ ပြင်ဆင်ထားပါသည်
       let src = (imgName.startsWith('http') || imgName.startsWith('data:')) ? imgName : `assets/logo/${imgName}`;
       return `<img src="${src}" class="bank-logo" onerror="this.outerHTML='<span style=\\'font-size:16px;\\'>🏦</span>'">`;
     } else {
@@ -341,7 +342,6 @@
   const fmt = (n) => Number(n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const iso = () => new Date().toISOString().split('T')[0];
 
-  // မြန်မာဂဏန်းများ အင်္ဂလိပ်ဂဏန်းသို့ အလိုအလျောက် ပြောင်းပေးမည့်စနစ်
   document.addEventListener('input', function(e) {
     if (e.target.tagName === 'INPUT' && e.target.type !== 'date' && e.target.type !== 'text' && e.target.inputMode === 'decimal') {
       const mmNumbers = { '၀':'0', '၁':'1', '၂':'2', '၃':'3', '၄':'4', '၅':'5', '၆':'6', '၇':'7', '၈':'8', '၉':'9' };
@@ -354,7 +354,6 @@
     }
   });
 
-  // 1. Password Protected Modal Logic
   const adminModal = document.getElementById('adminModal');
   document.getElementById('btnOpenAdmin').onclick = () => {
     const pwd = prompt("Admin Password ရိုက်ထည့်ပါ:");
@@ -367,12 +366,20 @@
   document.getElementById('btnCloseAdmin').onclick = () => adminModal.classList.remove('is-open');
   adminModal.addEventListener('click', (e) => { if(e.target === adminModal) adminModal.classList.remove('is-open'); });
 
-  // 2. Fetch & Initialize Admin Settings
+  // 🔹 DATA MIGRATION FIX: ယခင်သိမ်းထားသော String Array များကို Object Array အဖြစ် အလိုအလျောက် ပြောင်းပေးမည် 🔹
   async function initBankSettings() {
     const docRef = doc(db, "settings", SETTINGS_DOC_ID);
     const snap = await getDoc(docRef);
+    
     if(snap.exists() && snap.data().banks) {
-      currentBanks = snap.data().banks;
+      let savedBanks = snap.data().banks;
+      // Convert legacy strings to new objects
+      currentBanks = savedBanks.map(b => {
+        if (typeof b === 'string') return { name: b, logo: "" };
+        return b;
+      });
+      // Save the converted format back to database
+      await setDoc(docRef, { banks: currentBanks });
     } else {
       currentBanks = [...DEFAULT_BANKS];
       await setDoc(docRef, { banks: currentBanks });
@@ -380,7 +387,6 @@
     renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders();
   }
 
-  // 3. Render Admin Tags
   function renderAdminPanel() {
     const container = document.getElementById('bankTagsContainer');
     container.innerHTML = "";
@@ -397,7 +403,6 @@
     });
   }
 
-  // 4. Render Form Inputs Dynamically (With Logos)
   function renderDynamicForm() {
     document.querySelectorAll('.dynamic-bank-label').forEach(el => el.remove());
     const anchor = document.getElementById('bankInputsAnchor');
@@ -414,7 +419,6 @@
     document.querySelectorAll('.calc').forEach(i => i.addEventListener('input', recalc));
   }
 
-  // 5. Render Table Headers Dynamically (With Logos)
   function renderDynamicTableHeaders() {
     const theadTr = document.getElementById('balanceTableHead');
     let html = `<th style="text-align:center;">Date</th>`;
@@ -425,7 +429,6 @@
     theadTr.innerHTML = html;
   }
 
-  // Bank Admin Actions
   document.getElementById('btnAddBank').onclick = async () => {
     const nameInput = document.getElementById('newBankName');
     const logoInput = document.getElementById('newBankLogo');
@@ -445,7 +448,6 @@
     renderAdminPanel(); renderDynamicForm(); renderDynamicTableHeaders(); sync(); 
   };
 
-  // Edit Bank Name & Logo Logic
   window.editBankName = async (idx) => {
     const bankObj = currentBanks[idx];
     const oldName = bankObj.name;
@@ -455,7 +457,6 @@
     if (!newName || newName.trim() === "") return;
     const trimmedNewName = newName.trim();
 
-    // Prompts for Filename instead of URL
     const newLogo = prompt(`"${trimmedNewName}" ၏ ပုံဖိုင်အမည် (ဥပမာ - bbl.png) ပြင်ဆင်ရန် (မထည့်လိုပါက အလွတ်ထားပါ):`, oldLogo);
     const trimmedNewLogo = (newLogo || "").trim();
 
@@ -546,7 +547,6 @@
   document.getElementById('btnAddMMK').onclick = () => { mmkItems.push({amount:"", note:""}); renderMMK(); };
 
   async function sync() {
-    // 1. Debt 
     const dSnap = await getDocs(query(collection(db, "outstanding_debt"), orderBy("date", "asc")));
     const dFilter = document.getElementById('dFilter').value;
     const dBody = document.querySelector("#dTable tbody"); dBody.innerHTML = "";
@@ -569,7 +569,6 @@
     const dSel = document.getElementById('dFilter'); const dOld = dSel.value;
     dSel.innerHTML = '<option value="">All</option>' + Array.from(dNames).sort().map(n => `<option value="${n}" ${n===dOld?'selected':''}>${n}</option>`).join('');
 
-    // 2. People Ledger
     const pSnap = await getDocs(query(collection(db, "other_people_txn"), orderBy("date", "asc")));
     const pFilter = document.getElementById('pFilter').value;
     const pBody = document.querySelector("#pTable tbody"); pBody.innerHTML = "";
@@ -594,7 +593,6 @@
     if(pFilter) { bulkBtn.style.display = 'inline-block'; bulkBtn.textContent = `Delete ALL for "${pFilter}"`; } 
     else { bulkBtn.style.display = 'none'; }
 
-    // 3. Balance List
     const bSnap = await getDocs(query(collection(db, "daily_balance"), orderBy("date", "asc")));
     const bBody = document.querySelector("#dataTable tbody"); bBody.innerHTML = "";
     let last = null; let balanceRowsHTML = []; 
@@ -604,6 +602,7 @@
       let rowHtml = `<tr><td style="text-align:center;">${d.date}</td>`;
       currentBanks.forEach(bankObj => {
         const safeId = "bank_" + bankObj.name.replace(/\s+/g, "_");
+        // Check for safeId first, then raw name, to ensure old data loads correctly
         let v = (d[safeId] !== undefined) ? d[safeId] : (d[bankObj.name] !== undefined ? d[bankObj.name] : 0);
         rowHtml += `<td>${fmt(v)}</td>`;
       });
@@ -612,7 +611,6 @@
     });
     bBody.innerHTML = balanceRowsHTML.reverse().join("");
 
-    // 4. Rules
     const rSnap = await getDocs(collection(db, "auto_rules"));
     const rBody = document.querySelector("#rulesTable tbody"); rBody.innerHTML = "";
     rSnap.forEach(s => {
@@ -623,7 +621,6 @@
     recalc();
   }
 
-  // --- ACTIONS ---
   window.editDebt = (id, date, name, debt, repay, note) => { 
     editDebtId = id; document.getElementById('dDate').value = date; document.getElementById('dName').value = name; document.getElementById('dDebt').value = debt || ''; document.getElementById('dRepay').value = repay || ''; document.getElementById('dNote').value = note; 
     document.getElementById('btnSaveDebt').textContent = "Update Debt Record"; 
@@ -639,7 +636,12 @@
   window.editMain = async (id) => {
     const snap = await getDocs(collection(db, "daily_balance")); const d = snap.docs.find(s => s.id === id).data();
     editMainId = id; document.getElementById('date').value = d.date; 
-    currentBanks.forEach(bankObj => { const safeId = "bank_" + bankObj.name.replace(/\s+/g, "_"); let v = (d[safeId] !== undefined) ? d[safeId] : (d[bankObj.name] !== undefined ? d[bankObj.name] : 0); const el = document.getElementById(safeId); if(el) el.value = v || ''; });
+    currentBanks.forEach(bankObj => { 
+      const safeId = "bank_" + bankObj.name.replace(/\s+/g, "_"); 
+      let v = (d[safeId] !== undefined) ? d[safeId] : (d[bankObj.name] !== undefined ? d[bankObj.name] : 0); 
+      const el = document.getElementById(safeId); 
+      if(el) el.value = v || ''; 
+    });
     document.getElementById('rate').value = d.rate || ''; mmkItems = d.mmkItems || []; renderMMK(); document.getElementById('btnSaveMain').textContent = "Update Balance"; document.getElementById('balanceForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -651,7 +653,6 @@
     document.getElementById('pFilter').value = ""; sync(); alert(`"${name}" ၏ စာရင်းအားလုံး ဖျက်ပြီးပါပြီ။`);
   };
 
-  // --- EXPORT LOGIC WITH textContent FIX ---
   document.getElementById('btnExportMain').onclick = () => {
     const headers = ["Date", ...currentBanks.map(b => b.name), "Debt", "MMK", "Rate", "Total THB", "OrigTotal", "Other-", "Final", "Change"];
     const rows = [headers];
@@ -659,50 +660,32 @@
     trs.reverse().forEach(tr => { 
       const row = []; 
       tr.querySelectorAll("td").forEach((td, i) => { 
-        if(i < headers.length) {
-          row.push(td.textContent.trim().replace(/,/g, '')); 
-        }
+        if(i < headers.length) { row.push(td.textContent.trim().replace(/,/g, '')); }
       }); 
       rows.push(row); 
     });
     const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); 
-    XLSX.utils.book_append_sheet(wb, ws, "DailyBalance"); 
-    XLSX.writeFile(wb, "Daily_Balance.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "DailyBalance"); XLSX.writeFile(wb, "Daily_Balance.xlsx");
   };
 
   document.getElementById('btnExportPeople').onclick = () => {
     const rows = [["Date","Name","Description","Cash In","Cash Out","Balance"]];
     document.querySelectorAll("#pTable tbody tr").forEach(tr => { 
-      const row = []; 
-      tr.querySelectorAll("td").forEach((td, i) => { 
-        if(i < 6) {
-          row.push(td.textContent.trim().replace(/,/g, '')); 
-        }
-      }); 
-      rows.push(row); 
+      const row = []; tr.querySelectorAll("td").forEach((td, i) => { if(i < 6) { row.push(td.textContent.trim().replace(/,/g, '')); } }); rows.push(row); 
     });
     const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); 
-    XLSX.utils.book_append_sheet(wb, ws, "Ledger"); 
-    XLSX.writeFile(wb, "Ledger.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Ledger"); XLSX.writeFile(wb, "Ledger.xlsx");
   };
 
   document.getElementById('btnExportDebt').onclick = () => {
     const rows = [["Date","Name","Note","Debt (+)","Repay (-)","Balance"]];
     document.querySelectorAll("#dTable tbody tr").forEach(tr => { 
-      const row = []; 
-      tr.querySelectorAll("td").forEach((td, i) => { 
-        if(i < 6) {
-          row.push(td.textContent.trim().replace(/,/g, '')); 
-        }
-      }); 
-      rows.push(row); 
+      const row = []; tr.querySelectorAll("td").forEach((td, i) => { if(i < 6) { row.push(td.textContent.trim().replace(/,/g, '')); } }); rows.push(row); 
     });
     const ws = XLSX.utils.aoa_to_sheet(rows), wb = XLSX.utils.book_new(); 
-    XLSX.utils.book_append_sheet(wb, ws, "Outstanding_Debt"); 
-    XLSX.writeFile(wb, "Outstanding_Debt.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Outstanding_Debt"); XLSX.writeFile(wb, "Outstanding_Debt.xlsx");
   };
 
-  // --- SUBMITS ---
   document.getElementById('balanceForm').onsubmit = async (e) => { e.preventDefault(); let data = { date: document.getElementById('date').value, outstandingDebt: val('outstandingDebt'), MMK: val('MMK'), rate: val('rate'), total: val('total'), totalBeforeOther: val('totalBeforeOther'), minusOther: val('minusOther'), totalOther: val('totalOther'), mmkItems }; currentBanks.forEach(bankObj => { const safeId = "bank_" + bankObj.name.replace(/\s+/g, "_"); data[safeId] = val(safeId); }); if(editMainId) await setDoc(doc(db, "daily_balance", editMainId), data); else await addDoc(collection(db, "daily_balance"), data); resetMainForm(); sync(); };
   document.getElementById('peopleForm').onsubmit = async (e) => { e.preventDefault(); const data = { date: document.getElementById('pDate').value, name: document.getElementById('pName').value, cashIn: val('pIn'), cashOut: val('pOut'), desc: document.getElementById('pDesc').value }; if(editPersonId) await setDoc(doc(db, "other_people_txn", editPersonId), data); else await addDoc(collection(db, "other_people_txn"), data); resetPersonForm(); sync(); };
   document.getElementById('debtForm').onsubmit = async (e) => { e.preventDefault(); const data = { date: document.getElementById('dDate').value, name: document.getElementById('dName').value, debt: val('dDebt'), repay: val('dRepay'), note: document.getElementById('dNote').value }; if(editDebtId) await setDoc(doc(db, "outstanding_debt", editDebtId), data); else await addDoc(collection(db, "outstanding_debt"), data); resetDebtForm(); sync(); };
