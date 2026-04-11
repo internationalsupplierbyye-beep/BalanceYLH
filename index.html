@@ -107,7 +107,7 @@
 <header>
   <div class="header-text">
     <h1>Daily Balance Database</h1>
-    <p>Manual Logo Assign (Error Fallback) + Myanmar Num Fix + Repay Logic + Export</p>
+    <p>GitHub Assets/Logo Mapping + Myanmar Num Fix + Repay Logic + Export</p>
   </div>
   <button id="btnOpenAdmin" class="btn-settings">⚙️ စနစ်ပြင်ဆင်ရန်</button>
 </header>
@@ -275,7 +275,7 @@
       <h2>⚙️ စနစ်ပြင်ဆင်ရန် (Bank Accounts)</h2>
       <button class="btn-close" id="btnCloseAdmin">×</button>
     </div>
-    <p class="info" style="margin-bottom: 15px;">ပုံထည့်ရန် "ပုံဖိုင်အမည်" အကွက်တွင် ဥပမာ - <strong>bbl.png</strong> သို့မဟုတ် <strong>kpay.jpg</strong> ဟုသာ ထည့်ပါ။ စနစ်မှ အလိုအလျောက် GitHub ပေါ်ရှိ <strong>assets/bbl.png</strong> နှင့် ချိတ်ဆက်ပေးပါမည်။ ပုံမချိတ်ဆက်လိုပါက အလွတ်ထားခဲ့နိုင်ပါသည်။</p>
+    <p class="info" style="margin-bottom: 15px;">ပုံထည့်ရန် "ပုံဖိုင်အမည်" အကွက်တွင် ဥပမာ - <strong>bbl.png</strong> သို့မဟုတ် <strong>kpay.jpg</strong> ဟုသာ ထည့်ပါ။ စနစ်မှ အလိုအလျောက် GitHub ပေါ်ရှိ <strong>assets/logo/bbl.png</strong> နှင့် ချိတ်ဆက်ပေးပါမည်။ ပုံမချိတ်ဆက်လိုပါက အလွတ်ထားခဲ့နိုင်ပါသည်။</p>
     
     <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap;">
       <label style="flex:1; min-width: 150px;">အကောင့်အသစ် <input type="text" id="newBankName" placeholder="e.g. YBBL, KPay..." style="width:100%; margin-top: 4px;" /></label>
@@ -319,13 +319,13 @@
   const SETTINGS_DOC_ID = "bank_accounts_config_v2";
 
   // =====================================================================
-  // 🔹 LOGO HANDLER (MANUAL MATCHING WITH ERROR FALLBACK)
+  // 🔹 LOGO HANDLER (UPDATED for assets/logo/ path)
   // =====================================================================
   function getLogoHtml(bankObj) {
     if(bankObj && bankObj.logo && bankObj.logo.trim() !== "") {
       let imgName = bankObj.logo.trim();
-      let src = (imgName.startsWith('http') || imgName.startsWith('data:')) ? imgName : `assets/${imgName}`;
-      // ပုံလင့်ခ်မှားနေပါက သို့မဟုတ် ပုံမရှိပါက ဘဏ် 🏦 ပုံလေး အလိုအလျောက် ပြန်ပေါ်နေစေရန် onerror ထည့်ထားပါသည်
+      // "assets/logo/" အောက်ကို သွားရှာဖို့ ပြင်ဆင်ထားပါသည်
+      let src = (imgName.startsWith('http') || imgName.startsWith('data:')) ? imgName : `assets/logo/${imgName}`;
       return `<img src="${src}" class="bank-logo" onerror="this.outerHTML='<span style=\\'font-size:16px;\\'>🏦</span>'">`;
     } else {
       return `<span style="font-size:16px;">🏦</span>`;
