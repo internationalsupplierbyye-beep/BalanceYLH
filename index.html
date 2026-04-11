@@ -107,7 +107,7 @@
 <header>
   <div class="header-text">
     <h1>Daily Balance Database</h1>
-    <p>Old Data Restored + GitHub Logo Mapping + Myanmar Num Fix</p>
+    <p>Myanmar Number Fix (Mobile) + Old Data Restored + GitHub Logo Mapping</p>
   </div>
   <button id="btnOpenAdmin" class="btn-settings">⚙️ စနစ်ပြင်ဆင်ရန်</button>
 </header>
@@ -342,17 +342,39 @@
   const fmt = (n) => Number(n || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const iso = () => new Date().toISOString().split('T')[0];
 
-  document.addEventListener('input', function(e) {
-    if (e.target.tagName === 'INPUT' && e.target.type !== 'date' && e.target.type !== 'text' && e.target.inputMode === 'decimal') {
-      const mmNumbers = { '၀':'0', '၁':'1', '၂':'2', '၃':'3', '၄':'4', '၅':'5', '၆':'6', '၇':'7', '၈':'8', '၉':'9' };
-      if (/[၀-၉]/.test(e.target.value)) {
-        let start = e.target.selectionStart;
-        e.target.value = e.target.value.replace(/[၀-၉]/g, match => mmNumbers[match]);
-        try { e.target.setSelectionRange(start, start); } catch(err){}
-        e.target.dispatchEvent(new Event('input', { bubbles: true }));
+  // =====================================================================
+  // 🔹 မြန်မာဂဏန်းများ အင်္ဂလိပ်ဂဏန်းသို့ အလိုအလျောက် ပြောင်းပေးမည့်စနစ် (Mobile Fix) 🔹
+  // =====================================================================
+  function convertMyanmarNumbers(inputElement) {
+    const mmNumbers = { '၀':'0', '၁':'1', '၂':'2', '၃':'3', '၄':'4', '၅':'5', '၆':'6', '၇':'7', '၈':'8', '၉':'9' };
+    const originalValue = inputElement.value;
+    
+    // မြန်မာဂဏန်း ပါ/မပါ စစ်ဆေးမည်
+    if (/[၀-၉]/.test(originalValue)) {
+      const cursorPosition = inputElement.selectionStart; // Cursor နေရာမှတ်ထားမည်
+      const newValue = originalValue.replace(/[၀-၉]/g, match => mmNumbers[match]);
+      
+      inputElement.value = newValue;
+      
+      // Cursor နေရာကို မူလနေရာမှာပဲ ပြန်ထားပေးမည် (ဖုန်းမှာ Cursor နောက်ဆုံးပြေးသွားတတ်လို့ပါ)
+      try {
+        inputElement.setSelectionRange(cursorPosition, cursorPosition);
+      } catch(e) {}
+      
+      // အပြောင်းအလဲဖြစ်သွားကြောင်း System ကို အသိပေးပြီး Total တွေ တွက်ခိုင်းမည်
+      if(inputElement.classList.contains('calc') || inputElement.id === 'pIn' || inputElement.id === 'pOut' || inputElement.id === 'dDebt' || inputElement.id === 'dRepay' || inputElement.id === 'rAmt') {
+        if(typeof recalc === 'function') recalc();
       }
     }
+  }
+
+  // Keyup, Input event မျိုးစုံဖြင့် ဖမ်းယူခြင်း
+  document.addEventListener('input', function(e) {
+    if (e.target.tagName === 'INPUT' && (e.target.type === 'text' || e.target.inputMode === 'decimal')) {
+      convertMyanmarNumbers(e.target);
+    }
   });
+  // =====================================================================
 
   const adminModal = document.getElementById('adminModal');
   document.getElementById('btnOpenAdmin').onclick = () => {
@@ -416,7 +438,12 @@
       `;
       anchor.parentNode.insertBefore(label, anchor);
     });
+    // Rebind calc events to newly created inputs
     document.querySelectorAll('.calc').forEach(i => i.addEventListener('input', recalc));
+    // Additional listener for MM Number conversion on new dynamic inputs
+    document.querySelectorAll('.dynamic-bank-input').forEach(i => i.addEventListener('input', function(e) {
+      convertMyanmarNumbers(this);
+    }));
   }
 
   function renderDynamicTableHeaders() {
@@ -536,8 +563,13 @@
     const area = document.getElementById('mmkLines'); area.innerHTML = "";
     mmkItems.forEach((it, idx) => {
       const row = document.createElement('div'); row.className = 'mmk-line';
-      row.innerHTML = `<input type="text" inputmode="decimal" value="${it.amount}" placeholder="MMK"> <input type="text" value="${it.note}" placeholder="Note"> <button type="button" class="btn-danger" onclick="removeMMK(${idx})">Del</button>`;
-      row.children[0].oninput = (e) => { mmkItems[idx].amount = e.target.value; recalc(); };
+      row.innerHTML = `<input type="text" inputmode="decimal" class="mmk-dynamic-input" value="${it.amount}" placeholder="MMK"> <input type="text" value="${it.note}" placeholder="Note"> <button type="button" class="btn-danger" onclick="removeMMK(${idx})">Del</button>`;
+      
+      row.children[0].addEventListener('input', function(e) {
+        convertMyanmarNumbers(this); // Fix for MMK lines
+        mmkItems[idx].amount = this.value; 
+        recalc(); 
+      });
       row.children[1].oninput = (e) => { mmkItems[idx].note = e.target.value; };
       area.appendChild(row);
     });
