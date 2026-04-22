@@ -599,7 +599,7 @@
     document.getElementById('outstandingDebt').value = dTotalAll.toFixed(2);
     document.getElementById('debtGrandDisplay').textContent = fmt(dTotalAll);
     const dSel = document.getElementById('dFilter'); const dOld = dSel.value;
-    dSel.innerHTML = '<option value="">All</option>' + Array.from(dNames).sort().map(n => `<option value="${n}" ${n===dOld?'selected':''}>${n}</option>`).join('');
+    dSel.innerHTML = '<option value="">All</option>' + Array.from(dNames).sort().map(n => `<option value="${n}" ${n===dOld?'selected':''}>${n} (${fmt(dBals[n])})</option>`).join('');
 
     const pSnap = await getDocs(query(collection(db, "other_people_txn"), orderBy("date", "asc")));
     const pFilter = document.getElementById('pFilter').value;
@@ -619,7 +619,7 @@
     document.getElementById('totalAll').textContent = fmt(pTotalAll);
     document.getElementById('minusOther').value = pTotalAll.toFixed(2);
     const pSel = document.getElementById('pFilter'); const old = pSel.value;
-    pSel.innerHTML = '<option value="">All</option>' + Array.from(names).sort().map(n => `<option value="${n}" ${n===old?'selected':''}>${n}</option>`).join('');
+    pSel.innerHTML = '<option value="">All</option>' + Array.from(names).sort().map(n => `<option value="${n}" ${n===old?'selected':''}>${n} (${fmt(pBals[n])})</option>`).join('');
 
     const bulkBtn = document.getElementById('btnBulkDelPerson');
     if(pFilter) { bulkBtn.style.display = 'inline-block'; bulkBtn.textContent = `Delete ALL for "${pFilter}"`; } 
