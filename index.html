@@ -744,6 +744,41 @@
   window.delDoc = async (c, i) => { if(confirm("ဖျက်မည်မှာ သေချာပါသလား?")) { await deleteDoc(doc(db, c, i)); sync(); } };
   window.toggleRule = async (id, status) => { await updateDoc(doc(db, "auto_rules", id), { active: status }); sync(); };
 
+  // 🌟 (အသစ်ထည့်ထားသော Function) အလိုအလျောက် Cash Out လုပ်မည့်စနစ် 🌟
+  async function autoRunCatchUp() {
+    const rules = await getDocs(collection(db, "auto_rules"));
+    const txns = await getDocs(collection(db, "other_people_txn")); 
+    let created = 0, today = iso();
+    
+    for(let rDoc of rules.docs) {
+      const r = rDoc.data(); 
+      if(!r.active) continue; 
+      let d = r.start;
+      
+      while(d <= today) {
+        if(r.end && d > r.end) break;
+        if(!txns.docs.find(t => t.data().autoRef === `${rDoc.id}_${d}`)) { 
+          await addDoc(collection(db, "other_people_txn"), { 
+            date: d, name: r.name, cashIn: 0, cashOut: r.amt, 
+            desc: `Auto Cash Out (${r.amt} THB)`, autoRef: `${rDoc.id}_${d}` 
+          }); 
+          created++; 
+        }
+        let dateObj = new Date(d); 
+        dateObj.setDate(dateObj.getDate() + 1); 
+        d = dateObj.toISOString().split('T')[0];
+      }
+      // Last run date ကို Update လုပ်မည်
+      await updateDoc(doc(db, "auto_rules", rDoc.id), { lastRun: today });
+    }
+    
+    // အသစ်ဝင်သွားတဲ့ Data ရှိမှသာ Table တွေကို Refresh လုပ်မည်
+    if (created > 0) {
+      console.log(`Auto Run Complete! Created ${created} transactions.`);
+      sync(); 
+    }
+  }
+
   window.onload = async () => {
     const d = iso(); document.getElementById('date').value = d; document.getElementById('pDate').value = d; document.getElementById('dDate').value = d; document.getElementById('rStart').value = d;
     
@@ -758,7 +793,11 @@
     document.getElementById('pFilter').onchange = sync; 
     document.getElementById('dFilter').onchange = sync; 
     
-    await initBankSettings(); sync();
+    await initBankSettings(); 
+    await sync(); // 🌟 ပြင်ဆင်ချက်: sync ကို အရင်ဆုံး await ဖြင့် ပြီးအောင်စောင့်မည်
+    
+    // 🌟 ပြင်ဆင်ချက်: Website ပွင့်တာနဲ့ အလိုအလျောက် Cash Out Rule များကို စစ်ဆေးပြီး Run မည်
+    await autoRunCatchUp(); 
   };
 </script>
 </body>
